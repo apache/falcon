@@ -20,7 +20,7 @@ package org.apache.falcon.service;
 import com.google.common.annotations.VisibleForTesting;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +55,7 @@ import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
@@ -80,12 +81,12 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
 
     private static final EntitySLAMonitoringService SERVICE = new EntitySLAMonitoringService();
 
-    public static final String TAG_CRITICAL = "Missed-SLA-High";
-    public static final String TAG_WARN = "Missed-SLA-Low";
+    static final String TAG_CRITICAL = "Missed-SLA-High";
+    static final String TAG_WARN = "Missed-SLA-Low";
     private static final long MINUTE_DELAY = 60000L;
 
     private static final List<LifeCycle> PROCESS_LIFE_CYCLE =
-            Arrays.asList(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
+            Collections.singletonList(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
 
     private EntitySLAMonitoringService() {
 
@@ -176,7 +177,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         }
     }
 
-    public Boolean checkFeedClusterSLA(Feed feed){
+    private Boolean checkFeedClusterSLA(Feed feed){
         for(Cluster  cluster : feed.getClusters().getClusters()){
             Sla sla =  FeedHelper.getSLA(cluster, feed);
             if (sla != null){
@@ -187,7 +188,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
     }
 
 
-    public Boolean checkProcessClusterSLA(Process process){
+    private Boolean checkProcessClusterSLA(Process process){
         Clusters clusters = process.getClusters();
         for(org.apache.falcon.entity.v0.process.Cluster  cluster : clusters.getClusters()){
             org.apache.falcon.entity.v0.process.Sla sla =  ProcessHelper.getSLA(cluster, process);
@@ -207,9 +208,11 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (feed.getSla() != null && feed.getLocations() != null) {
                 for (Cluster cluster : feed.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName()) && FeedHelper.getSLA(cluster, feed) != null) {
+                        LOG.debug("Removing feed:{} for monitoring", feed.getName());
                         MONITORING_JDBC_STATE_STORE.deleteMonitoringEntity(feed.getName(), EntityType.FEED.toString());
                         MONITORING_JDBC_STATE_STORE.deletePendingInstances(feed.getName(), cluster.getName(),
                                 EntityType.FEED.toString());
+                        LOG.debug("Removing feed:{} for monitoring", feed.getName());
                     }
                 }
             }
@@ -219,6 +222,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (process.getSla() != null){
                 for (org.apache.falcon.entity.v0.process.Cluster  cluster : process.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName())) {
+                        LOG.debug("Removing feed:{} for monitoring", process.getName());
                         MONITORING_JDBC_STATE_STORE.deleteMonitoringEntity(process.getName(),
                                 EntityType.PROCESS.toString());
                         MONITORING_JDBC_STATE_STORE.deletePendingInstances(process.getName(), cluster.getName(),
@@ -292,7 +296,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         }
     }
 
-    void updatePendingInstances(String entityName, List<String> slaRemovedClusters , String entityType){
+    private void updatePendingInstances(String entityName, List<String> slaRemovedClusters, String entityType){
         for(String clusterName :slaRemovedClusters){
             MONITORING_JDBC_STATE_STORE.deletePendingInstances(entityName, clusterName,
                     entityType);
@@ -364,6 +368,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                     // add Instances from last checked time to 10 minutes from now(some buffer for status check)
                     Date newCheckPointTime = new Date(now().getTime() + lookAheadWindowMillis);
                     addPendingEntityInstances(newCheckPointTime);
+                } else {
+                    LOG.debug("No entities present for sla monitoring.");
                 }
             } catch (Throwable e) {
                 LOG.error("Feed SLA monitoring failed: ", e);
@@ -384,7 +390,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         }
     }
 
-    void addPendingEntityInstances(Date checkPointTime) throws FalconException {
+    private void addPendingEntityInstances(Date checkPointTime) throws FalconException {
         Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
         List<MonitoredEntityBean> entityBeanList = MONITORING_JDBC_STATE_STORE.getAllMonitoredEntities();
         for(MonitoredEntityBean monitoredEntityBean : entityBeanList) {
@@ -450,7 +456,6 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
                 AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-
                 InstancesResult instancesResult = wfEngine.getStatus(entity, nominalTime,
                         new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
                 if (instancesResult.getInstances().length > 0) {
@@ -459,6 +464,9 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                                 entity.getName(), clusterName, nominalTime);
                         return true;
                     }
+                } else if ((System.currentTimeMillis() - nominalTime.getTime())/(1000*60*60*24) >= Integer.parseInt(
+                        RuntimeProperties.get().getProperty("workflow.history.expiration.period.days", "7"))) {
+                    return true;
                 }
                 return false;
             }
@@ -552,8 +560,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
     public Set<SchedulableEntityInstance> getEntitySLAMissPendingAlerts(String entityName, String clusterName,
                                           Date start, Date end, String entityType) throws FalconException {
         Set<SchedulableEntityInstance> result = new HashSet<>();
-        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstances(entityName, clusterName,
-                entityType);
+        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstancesBetweenTimeRange(entityName,
+                clusterName, entityType, start, end);
         if (missingInstances == null){
             return result;
         }
@@ -611,8 +619,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         return result;
     }
 
-    Set<Pair<Date, String>> getProcessSLAStatus(org.apache.falcon.entity.v0.process.Sla sla, Date start,
-                                                Date end, List<Date> missingInstances) throws FalconException {
+    private Set<Pair<Date, String>> getProcessSLAStatus(org.apache.falcon.entity.v0.process.Sla sla, Date start,
+                                                        Date end, List<Date> missingInstances) throws FalconException {
         Date now = new Date();
         Frequency slaHigh = sla.getShouldEndIn();
         Set<Pair<Date, String>> result = new HashSet<>();

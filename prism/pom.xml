@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.11-SNAPSHOT</version>
+        <version>0.11</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>falcon-prism</artifactId>
@@ -126,6 +126,11 @@
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-multipart</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jvnet.mimepull</groupId>
+            <artifactId>mimepull</artifactId>
         </dependency>
 
         <dependency>

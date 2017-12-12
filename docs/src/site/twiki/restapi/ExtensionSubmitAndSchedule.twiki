@@ -17,7 +17,7 @@ Result of the submit and schedule operation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/submitAndSchedule/hdfs-mirroring
+POST http://localhost:15000/api/extension/submitAndSchedule/hdfs-mirroring
 jobName=sales-monthly
 jobClustername=primaryCluster
 jobClusterValidityStart=2015-03-13T00:00Z

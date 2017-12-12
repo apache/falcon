@@ -17,7 +17,7 @@ Result of the schedule operation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/schedule/sales-monthly
+POST http://localhost:15000/api/extension/schedule/sales-monthly
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -187,39 +188,118 @@ public abstract class AbstractFalconClient {
      * @param description description of the extension.
      * @return Result of the registerExtension command.
      */
-    public abstract String registerExtension(String extensionName, String packagePath, String description);
+    public abstract APIResult registerExtension(String extensionName, String packagePath, String description);
 
     /**
      *
      * @param extensionName extensionName that needs to be unregistered
      * @return Result of the unregisterExtension operation
      */
-    public abstract String unregisterExtension(String extensionName);
+    public abstract APIResult unregisterExtension(String extensionName);
 
     /**
-     * Prepare set of entities the extension has implemented and stage them to a local directory and submit them too.
+     *
+     * @param extensionName extensionName that needs to be enabled
+     * @return Result of the enableExtension operation
+     */
+    public abstract APIResult enableExtension(String extensionName);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be disabled
+     * @return Result of the disableExtension operation
+     */
+    public abstract APIResult disableExtension(String extensionName);
+
+    /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult submitExtensionJob(String extensionName, String jobName, String configPath,
                                                 String doAsUser);
 
     /**
-     * Prepare set of entities the extension has implemented and stage them to a local directory and submits and
+     * Schedules the set of entities that are part of the extension.
+     * @param jobName extensionJob that needs to be scheduled.
+     * @return APIResult stating status of scheduling the extension.
+     */
+    public abstract APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser);
+
+    /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and submits and
      * schedules them.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
                                                  String doAsUser);
+
+    /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and updates them.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     */
+    public abstract APIResult updateExtensionJob(String jobName, String configPath, String doAsUser);
+
+    /**
+     * Deletes the entities that are part of the extension job and then deleted the job from the DB.
+     * @param jobName name of the extension job that needs to be deleted.
+     * @return APIResult status of the deletion query.
+     */
+    public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be suspended.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user
+     * @return result status of the suspend operation.
+     */
+    public abstract APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be resumed.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user.
+     * @return result status of the resume operation.
+     */
+    public abstract APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *  Prepares set of entities the extension has implemented to validate the extension job.
+     * @param jobName job name of the extension job.
+     * @return
+     */
+    public abstract APIResult getExtensionJobDetails(final String jobName);
+
+    /**
+     * Returns details of an extension.
+     * @param extensionName name of the extension.
+     * @return
+     */
+    public abstract APIResult getExtensionDetail(final String extensionName);
+
+    /**
+     * Returns all registered extensions.
+     * @return
+     */
+    public abstract APIResult enumerateExtensions();
+
+    /**
+     * Returns all registered jobs for an extension.
+     * @return
+     */
+    public abstract ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser);
 
     /**
      *
@@ -514,7 +594,7 @@ public abstract class AbstractFalconClient {
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
-            throw new FalconCLIException("File not found:", e);
+            throw new FalconCLIException("File not found:" + filePath, e);
         }
         return stream;
     }

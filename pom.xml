@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.11</version>
     <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
@@ -702,6 +702,18 @@
                 <groupId>com.sun.jersey.contribs</groupId>
                 <artifactId>jersey-multipart</artifactId>
                 <version>${jersey.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jvnet</groupId>
+                        <artifactId>mimepull</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jvnet.mimepull</groupId>
+                <artifactId>mimepull</artifactId>
+                <version>1.9</version>
             </dependency>
 
             <dependency>

@@ -24,9 +24,12 @@ import org.apache.falcon.client.FalconExtensionConstants;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.ExtensionBuilder;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.StringUtils;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +39,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -50,9 +55,17 @@ public final class ExtensionHandler {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionHandler.class);
     private static final String UTF_8 = CharEncoding.UTF_8;
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
+    private static final String PATH_SEPARATOR = "_";
+    private static final String LOCATION = "location";
+    private static final String TYPE = "type";
+    private static final String NAME = "extensionName";
+    private static final String EXTENSION_BUILDER_INTERFACE_SERVICE_FILE =
+            "META-INF/services/org.apache.falcon.extensions.ExtensionBuilder";
 
-    public List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
-                                           InputStream configStream) throws IOException, FalconException {
+    private ExtensionHandler(){}
+
+    private List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
+                                     InputStream configStream) throws IOException, FalconException {
         Thread.currentThread().setContextClassLoader(extensionClassloader);
 
         ServiceLoader<ExtensionBuilder> extensionBuilders = ServiceLoader.load(ExtensionBuilder.class);
@@ -72,6 +85,7 @@ public final class ExtensionHandler {
 
         ExtensionBuilder extensionBuilder = null;
         try {
+            @SuppressWarnings("unchecked")
             Class<ExtensionBuilder> clazz = (Class<ExtensionBuilder>) extensionClassloader
                     .loadClass(result.get(0).getCanonicalName());
             extensionBuilder = clazz.newInstance();
@@ -80,17 +94,15 @@ public final class ExtensionHandler {
         }
 
         extensionBuilder.validateExtensionConfig(extensionName, configStream);
-        List<Entity> entities = extensionBuilder.getEntities(jobName, configStream);
 
-        return entities;
+        return extensionBuilder.getEntities(jobName, configStream);
     }
 
     public static List<Entity> loadAndPrepare(String extensionName, String jobName, InputStream configStream,
-                                              String extensionBuildLocation) throws IOException, FalconException {
-        Configuration conf = new Configuration();
-        FileSystem fs = FileSystem.get(conf);
+                                              String extensionBuildLocation)
+        throws IOException, FalconException, URISyntaxException {
         String stagePath = createStagePath(extensionName, jobName);
-        List<URL> urls = ExtensionHandler.copyExtensionPackage(extensionBuildLocation, fs, stagePath);
+        List<URL> urls = ExtensionHandler.copyExtensionPackage(extensionBuildLocation, stagePath);
 
         List<Entity> entities = prepare(extensionName, jobName, configStream, urls);
         ExtensionHandler.stageEntities(entities, stagePath);
@@ -100,6 +112,11 @@ public final class ExtensionHandler {
     public static List<Entity> prepare(String extensionName, String jobName, InputStream configStream, List<URL> urls)
         throws IOException, FalconException {
         ClassLoader extensionClassLoader = ExtensionClassLoader.load(urls);
+        LOG.debug("Urls loaded:" + StringUtils.join(", ", urls));
+        if (extensionClassLoader.getResourceAsStream(EXTENSION_BUILDER_INTERFACE_SERVICE_FILE) == null) {
+            throw new FalconCLIException("The extension build time jars do not contain "
+                    + EXTENSION_BUILDER_INTERFACE_SERVICE_FILE);
+        }
         ExtensionHandler extensionHandler = new ExtensionHandler();
 
         return extensionHandler.getEntities(extensionClassLoader, extensionName, jobName, configStream);
@@ -130,8 +147,8 @@ public final class ExtensionHandler {
     }
 
     private static String createStagePath(String extensionName, String jobName) {
-        String stagePath = TMP_BASE_DIR + File.separator + extensionName + File.separator + jobName
-                + File.separator + System.currentTimeMillis()/1000;
+        String stagePath = TMP_BASE_DIR + File.separator + extensionName + PATH_SEPARATOR + jobName
+                + PATH_SEPARATOR + System.currentTimeMillis();
         File tmpPath = new File(stagePath);
         if (tmpPath.mkdir()) {
             throw new FalconCLIException("Failed to create stage directory" + tmpPath.toString());
@@ -139,9 +156,10 @@ public final class ExtensionHandler {
         return stagePath;
     }
 
-    public static List<URL> copyExtensionPackage(String extensionBuildUrl, FileSystem fs, String stagePath)
-        throws IOException {
+    private static List<URL> copyExtensionPackage(String extensionBuildUrl, String stagePath)
+        throws IOException, FalconException, URISyntaxException {
 
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(new URI(extensionBuildUrl));
         Path libsPath = new Path(extensionBuildUrl, FalconExtensionConstants.LIBS);
         Path buildLibsPath = new Path(libsPath, FalconExtensionConstants.BUILD);
         Path localStagePath = new Path(stagePath);
@@ -161,7 +179,7 @@ public final class ExtensionHandler {
         return urls;
     }
 
-    public static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
+    static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
         List<URL> urls = new ArrayList<>();
 
         File file = new File(fileURL.getPath());
@@ -172,8 +190,6 @@ public final class ExtensionHandler {
                 for (File innerFile : files) {
                     if (innerFile.isFile()) {
                         urls.add(innerFile.toURI().toURL());
-                    } else {
-                        urls.addAll(getFilesInPath(file.toURI().toURL()));
                     }
                 }
             }
@@ -185,5 +201,37 @@ public final class ExtensionHandler {
 
         urls.add(fileURL);
         return urls;
+    }
+
+
+    public static String getExtensionLocation(String extensionName, JSONObject extensionDetailJson) {
+        String extensionBuildPath;
+        try {
+            extensionBuildPath = extensionDetailJson.get(LOCATION).toString();
+        } catch (JSONException e) {
+            throw new FalconCLIException("Failed to get extension location for the given extension:" + extensionName,
+                    e);
+        }
+        return extensionBuildPath;
+    }
+
+    public static  String getExtensionType(String extensionName, JSONObject extensionDetailJson) {
+        String extensionType;
+        try {
+            extensionType = extensionDetailJson.get(TYPE).toString();
+        } catch (JSONException e) {
+            throw new FalconCLIException("Failed to get extension type for the given extension:" + extensionName, e);
+        }
+        return extensionType;
+    }
+
+    public static  String getExtensionName(String jobName, JSONObject extensionJobDetailJson) {
+        String extensionType;
+        try {
+            extensionType = extensionJobDetailJson.get(NAME).toString();
+        } catch (JSONException e) {
+            throw new FalconCLIException("Failed to get extension name for the given extension job:" + jobName, e);
+        }
+        return extensionType;
     }
 }

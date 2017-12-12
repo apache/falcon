@@ -10,18 +10,15 @@ List jobs generated from an extension.
 ---++ Parameters
    * :extension-name Name of the extension.
    * sortOrder <optional> Sort order by job name. Valid options: "asc" (default) and "desc".
-   * offset <optional> Show results from the offset. Default is 0.
-   * numResults <optional> Number of results to show per request. Default is 10.
-   * fields <optional> Output fields separated by commas. Valid options: STATUS, TAGS, PIPELINES, CLUSTERS.
    * doAs <optional> Impersonate the user.
 
 ---++ Results
-Total number of results and a list of jobs generated from the extension, followed by the associated entities.
+Total number of results and a list of jobs implementing the given extension.
 
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/extensions/list/billCollection?fields=status,clusters,tags
+GET http://localhost:15000/api/extension/list/billCollection
 </verbatim>
 ---+++ Result
 <verbatim>
@@ -29,42 +26,8 @@ GET http://localhost:15000/api/extensions/list/billCollection?fields=status,clus
   "numJobs":"2",
   "jobs":{
     "job": [
-      {
-        "jobName": "daily-health-bill",
-        "jobEntities: {
-          "totalResults": "2",
-          "entity": [
-            {
-              "type":"FEED",
-              "name":"SampleUSHealthBill",
-              "status":"SUBMITTED”,
-              "tags":{"tag":["related=ushealthcare","department=billingDepartment","_falcon_extension_name=billCoollection","_falcon_extension_job=daily-health-bill"]},
-              "clusters": {"cluster":["SampleCluster1","primaryCluster”]}
-            },
-            {
-              "type":"PROCESS”,
-              "name":"SampleBillPay”,
-              "status":"RUNNING”,
-              "tags":{"tag":["related=healthcare","department=billingDepartment","_falcon_extension_name=billCoollection","_falcon_extension_job=daily-health-bill"]},
-              "clusters":{"cluster":"primaryCluster”}
-            }
-          ]
-        }
-      },
-      {
-        "jobName": "fsa-bill",
-        "jobEntities": {
-          "totalResults": "1",
-          "entity":
-              {
-                "type":"PROCESS”,
-                "name":"FSAPay”,
-                "status":"RUNNING”,
-                "tags”:{"tag":["related=healthcare","department=billingDepartment","_falcon_extension_name=billCollection","_falcon_extension_job=fsa-bill"]},
-                "clusters":{"cluster":"primaryCluster”}
-              }
-        }
-      }
+      {"daily-health-bill"},
+      {"fsa-bill"}
     ]
   }
 }

@@ -112,7 +112,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
         if (pendingInstanceBeanList == null || pendingInstanceBeanList.isEmpty()){
             return;
         }
-        LOG.trace("In processSLACandidates :" + pendingInstanceBeanList.size());
+        LOG.debug("In processSLACandidates :" + pendingInstanceBeanList.size());
         try{
             for (PendingInstanceBean pendingInstanceBean : pendingInstanceBeanList) {
 
@@ -129,7 +129,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                 if (schedulableEntityInstances.isEmpty()){
                     store.deleteEntityAlertInstance(entityName, cluster.getName(), nominalTime,
                             entityType);
-                    return;
+                    continue;
                 }
                 List<SchedulableEntityInstance> schedulableEntityList = new ArrayList<>(schedulableEntityInstances);
                 SchedulableEntityInstance schedulableEntityInstance = schedulableEntityList.get(0);

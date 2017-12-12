@@ -48,10 +48,10 @@ public class CopyReducer extends Reducer<Text, Text, Text, Text> {
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        FileSystem fs= FileSystem.get(
+        FileSystem fs = FileSystem.get(
                 FileUtils.getConfiguration(context.getConfiguration(),
-                conf.get(HiveDRArgs.TARGET_NN.getName()),
-                conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName())));
+                        conf.get(HiveDRArgs.TARGET_NN.getName()),
+                        conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName())));
         hiveDRStore = new HiveDRStatusStore(fs);
     }
 
@@ -67,7 +67,7 @@ public class CopyReducer extends Reducer<Text, Text, Text, Text> {
 
     @Override
     protected void reduce(Text key, Iterable<Text> values, final Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         List<ReplicationStatus> replStatusList = new ArrayList<ReplicationStatus>();
         ReplicationStatus rs;
         timer = new ScheduledThreadPoolExecutor(1);

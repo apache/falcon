@@ -24,6 +24,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -32,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,9 +91,11 @@ public abstract class EntityParser<T extends Entity> {
     @SuppressWarnings("unchecked")
     public T parse(InputStream xmlStream) throws FalconException {
         try {
+            XMLInputFactory xif = SchemaHelper.createXmlInputFactory();
+            XMLStreamReader xsr = xif.createXMLStreamReader(xmlStream);
             // parse against schema
             Unmarshaller unmarshaller = entityType.getUnmarshaller();
-            T entity = (T) unmarshaller.unmarshal(xmlStream);
+            T entity = (T) unmarshaller.unmarshal(xsr);
             LOG.info("Parsed Entity: {}", entity.getName());
             return entity;
         } catch (Exception e) {

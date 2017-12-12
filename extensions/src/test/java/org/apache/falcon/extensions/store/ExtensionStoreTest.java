@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
 import org.apache.falcon.hadoop.JailedFileSystem;
@@ -36,20 +37,20 @@ import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.util.Map;
 
 /**
- *  Tests for extension store.
+ * Tests for extension store.
  */
 public class ExtensionStoreTest extends AbstractTestExtensionStore {
     private static Map<String, String> resourcesMap;
     private static JailedFileSystem fs;
-    protected static final String EXTENSION_PATH = "/projects/falcon/extension";
+    protected static final String EXTENSION_PATH = "/projects/falcon/extension/";
     private static final String STORAGE_URL = "jail://global:00";
 
     @BeforeClass
@@ -104,36 +105,105 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         }
     }
 
+    @Test(expectedExceptions=ValidationException.class)
+    public void testFailureCaseRegisterExtensionForURL() throws IOException, URISyntaxException, FalconException{
+        store = ExtensionStore.get();
+        createLibs(EXTENSION_PATH);
+        store.registerExtension("test", EXTENSION_PATH, "test desc", "falconUser");
+    }
 
     @Test
-    public void testRegisterExtension() throws IOException, URISyntaxException, FalconException{
-        createLibs();
-        createReadmeAndJar();
-        createMETA();
+    public void testRegisterExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testRegister";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
         store = ExtensionStore.get();
-        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc");
+        store.registerExtension("test", STORAGE_URL + extensionPath, "test desc", "falconUser");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 1);
     }
 
-    @Test(expectedExceptions=ValidationException.class)
-    public void testFailureCaseRegisterExtension() throws IOException, URISyntaxException, FalconException{
+    @Test(expectedExceptions = ValidationException.class)
+    public void testFailureCaseRegisterExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testRegister";
         store = ExtensionStore.get();
-        createLibs();
-        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc");
+        createLibs(extensionPath);
+        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc", "falconUser");
     }
 
-    private void createMETA() throws IOException{
-        Path path = new Path(EXTENSION_PATH + "/META");
-        if (fs.exists(path)){
+    @Test
+    public void testDeleteExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testDelete";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("toBeDeleted", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        Assert.assertTrue(store.getResource(STORAGE_URL + extensionPath + "/README").equals("README"));
+        store.deleteExtension("toBeDeleted", "falconUser");
+        ExtensionMetaStore metaStore = new ExtensionMetaStore();
+        Assert.assertEquals(metaStore.getAllExtensions().size(), 0);
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testFailureDeleteExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testACLOnDelete";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("ACLFailure", STORAGE_URL + extensionPath, "test desc", "oozieUser");
+        store.deleteExtension("ACLFailure", "falconUser");
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testStatusChangeExtensionACLFailure() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChangeACLFailure";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChangeACLFailure", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.updateExtensionStatus("testStatusChangeACLFailure", "oozieUser", ExtensionStatus.DISABLED);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testStatusChangeExtensionValidationFailure() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChangeValidationFailure";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChangeValidationFailure", STORAGE_URL + extensionPath, "test desc",
+                "falconUser");
+        store.updateExtensionStatus("testStatusChangeValidationFailure", "falconUser", ExtensionStatus.ENABLED);
+    }
+
+    @Test()
+    public void testStatusChangeExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChange";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChange", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.updateExtensionStatus("testStatusChange", "falconUser", ExtensionStatus.DISABLED);
+        ExtensionMetaStore metaStore = new ExtensionMetaStore();
+        Assert.assertEquals(metaStore.getDetail("testStatusChange").getStatus(), ExtensionStatus.DISABLED);
+    }
+
+    private void createMETA(String extensionPath) throws IOException {
+        Path path = new Path(extensionPath + "/META");
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         fs.mkdirs(path);
-        path = new Path(EXTENSION_PATH + "/META/test.properties");
+        path = new Path(extensionPath + "/META/test.properties");
         OutputStream os = fs.create(path);
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         br.write("Hello World");
-        if (fs.exists(path)){
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         br.write("test properties");
@@ -141,29 +211,35 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         br.close();
     }
 
-    private void createLibs() throws IOException{
-        Path path = new Path(EXTENSION_PATH);
-        if (fs.exists(path)){
+    private void createLibs(String extensionPath) throws IOException {
+        Path path = new Path(extensionPath);
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         fs.mkdirs(path);
-        path = new Path(EXTENSION_PATH + "/libs//libs/build");
+        path = new Path(extensionPath + "/libs//libs/build");
         fs.mkdirs(path);
     }
 
-    private void createReadmeAndJar() throws IOException{
-        Path path = new Path(EXTENSION_PATH + "/README");
-        if (fs.exists(path)){
+    private void createReadmeAndJar(String extensionPath) throws IOException {
+        Path path = new Path(extensionPath + "/README");
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
-        fs.create(path);
-        path = new Path(EXTENSION_PATH + "/libs/build/test.jar");
         OutputStream os = fs.create(path);
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        br.write("README");
+        fs.create(path);
+        br.close();
+        os.close();
+        path = new Path(extensionPath + "/libs/build/test.jar");
+        os = fs.create(path);
+        br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         br.write("Hello World");
         br.write("test jar");
         fs.create(path);
         br.close();
+        os.close();
     }
 
     private void clearDB() {
@@ -177,6 +253,5 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
             em.close();
         }
     }
-
 }
 

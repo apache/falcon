@@ -74,6 +74,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     @Override
     public void validate(Process process) throws FalconException {
+        validate(process, true);
+    }
+
+    public void validate(Process process, boolean checkDependentFeeds) throws FalconException {
         if (process.getTimezone() == null) {
             process.setTimezone(TimeZone.getTimeZone("UTC"));
         }
@@ -106,29 +110,34 @@ public class ProcessEntityParser extends EntityParser<Process> {
             validateHDFSPaths(process, clusterName);
             validateProperties(process);
 
-            if (process.getInputs() != null) {
-                for (Input input : process.getInputs().getInputs()) {
-                    validateEntityExists(EntityType.FEED, input.getFeed());
-                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
-                    CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                    CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
-                    CrossEntityValidations.validateInstanceRange(process, input, feed);
-                    validateInputPartition(input, feed);
-                    validateOptionalInputsForTableStorage(feed, input);
+            if (checkDependentFeeds) {
+                if (process.getInputs() != null) {
+                    for (Input input : process.getInputs().getInputs()) {
+                        validateEntityExists(EntityType.FEED, input.getFeed());
+                        Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+                        CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
+                        CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
+                        CrossEntityValidations.validateInstanceRange(process, input, feed);
+                        validateInputPartition(input, feed);
+                        validateOptionalInputsForTableStorage(feed, input);
+                    }
                 }
-            }
 
-            if (process.getOutputs() != null) {
-                for (Output output : process.getOutputs().getOutputs()) {
-                    validateEntityExists(EntityType.FEED, output.getFeed());
-                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
-                    CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                    CrossEntityValidations.validateInstance(process, output, feed);
+
+                if (process.getOutputs() != null) {
+                    for (Output output : process.getOutputs().getOutputs()) {
+                        validateEntityExists(EntityType.FEED, output.getFeed());
+                        Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
+                        CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
+                        CrossEntityValidations.validateInstance(process, output, feed);
+                    }
                 }
             }
         }
         validateDatasetName(process.getInputs(), process.getOutputs());
-        validateLateInputs(process);
+        if (checkDependentFeeds) {
+            validateLateInputs(process);
+        }
         validateProcessSLA(process);
         validateHadoopQueue(process);
         validateProcessEntity(process);

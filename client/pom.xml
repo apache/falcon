@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.11-SNAPSHOT</version>
+        <version>0.11</version>
     </parent>
     <artifactId>falcon-client</artifactId>
     <description>Apache Falcon Java client</description>
@@ -84,6 +84,11 @@
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-multipart</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jvnet.mimepull</groupId>
+            <artifactId>mimepull</artifactId>
         </dependency>
 
         <dependency>
