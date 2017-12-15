@@ -18,9 +18,11 @@
 
 package org.apache.falcon.messaging;
 
+import java.io.File;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.commons.io.FileUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
@@ -58,6 +60,7 @@ public class JMSMessageConsumerTest {
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "FALCON.ENTITY.TOPIC";
     private static final String SECONDARY_TOPIC_NAME = "FALCON.ENTITY.SEC.TOPIC";
+    private static final String DATA_DIRECTORY = "target/activemq";
     private BrokerService broker;
 
     private JMSMessageConsumer subscriber;
@@ -65,9 +68,10 @@ public class JMSMessageConsumerTest {
 
     @BeforeMethod
     public void setup() throws Exception {
+        FileUtils.deleteDirectory(new File(DATA_DIRECTORY));
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
-        broker.setDataDirectory("target/activemq");
+        broker.setDataDirectory(DATA_DIRECTORY);
         broker.setBrokerName("localhost");
         jobEndService = Mockito.mock(WorkflowJobEndNotificationService.class);
         broker.start();
@@ -291,6 +295,7 @@ public class JMSMessageConsumerTest {
         ConfigurationStore.get().remove(EntityType.PROCESS, "process1");
         broker.stop();
         subscriber.closeSubscriber();
+        FileUtils.deleteDirectory(new File(DATA_DIRECTORY));
     }
 
     @Test
