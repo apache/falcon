@@ -40,7 +40,7 @@ public class EvictedInstanceSerDeTest {
     private EmbeddedCluster cluster;
     private FileSystem fs;
     private Path csvFilePathWithNoContent;
-    private Path csvFilePath2WithContent;
+    private Path csvFilePathWithContent;
     private StringBuffer evictedInstancePaths = new StringBuffer(
             "thrift://falcon-distcp-1.cs1cloud.internal:9083/default/retention_hours_7/year=2010")
             .append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR)
@@ -53,7 +53,7 @@ public class EvictedInstanceSerDeTest {
 
         fs = FileSystem.get(cluster.getConf());
         csvFilePathWithNoContent = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-01-00.csv");
-        csvFilePath2WithContent = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-02-00.csv");
+        csvFilePathWithContent = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-02-00.csv");
     }
 
     @AfterClass
@@ -71,8 +71,8 @@ public class EvictedInstanceSerDeTest {
 
     @Test
     public void testSerializeEvictedInstancePathsWithEviction() throws Exception {
-        EvictedInstanceSerDe.serializeEvictedInstancePaths(fs, csvFilePath2WithContent, evictedInstancePaths);
-        Assert.assertEquals(readLogFile(csvFilePath2WithContent), evictedInstancePaths.toString());
+        EvictedInstanceSerDe.serializeEvictedInstancePaths(fs, csvFilePathWithContent, evictedInstancePaths);
+        Assert.assertEquals(readLogFile(csvFilePathWithContent), evictedInstancePaths.toString());
     }
 
     @Test(dependsOnMethods = "testSerializeEvictedInstancePathsForNoEviction")
@@ -83,7 +83,7 @@ public class EvictedInstanceSerDeTest {
 
     @Test(dependsOnMethods = "testSerializeEvictedInstancePathsWithEviction")
     public void testDeserializeEvictedInstancePathsWithEviction() throws Exception {
-        String[] instancePaths = EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, csvFilePath2WithContent);
+        String[] instancePaths = EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, csvFilePathWithContent);
         Assert.assertEquals(instancePaths.length, 2);
         Assert.assertTrue(instancePaths[0].equals(
                 "thrift://falcon-distcp-1.cs1cloud.internal:9083/default/retention_hours_7/year=2010"));
