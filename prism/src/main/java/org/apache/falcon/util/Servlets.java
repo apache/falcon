@@ -45,13 +45,10 @@ public final class Servlets {
             return user;
         }
 
-
         user = httpRequest.getRemoteUser();
         if (!StringUtils.isEmpty(user)) {
             return user;
         }
-
-
 
         user = httpRequest.getHeader("Remote-User"); // backwards-compatibility
         if (!StringUtils.isEmpty(user)) {
