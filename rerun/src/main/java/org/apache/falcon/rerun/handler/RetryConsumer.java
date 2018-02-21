@@ -63,7 +63,9 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
             if (!id.contains("-C@") && StringUtils.isNotBlank(message.getParentId())) {
                 id = message.getParentId();
             }
-            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, false);
+
+            handler.getWfEngine(entityType, entityName, message.getWorkflowUser())
+                    .reRun(message.getClusterName(), id, null, false);
         } catch (Exception e) {
             if (e instanceof EntityNotRegisteredException) {
                 LOG.warn("Entity {} of type {} doesn't exist in config store. So retry "

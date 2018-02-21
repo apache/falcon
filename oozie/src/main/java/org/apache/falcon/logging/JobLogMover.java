@@ -23,13 +23,14 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.HostnameFilter;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
@@ -72,10 +73,6 @@ public class JobLogMover {
     }
 
     public void moveLog(WorkflowExecutionContext context){
-        if (UserGroupInformation.isSecurityEnabled()) {
-            LOG.info("Unable to move logs as security is enabled.");
-            return;
-        }
         try {
             run(context);
         } catch (Exception ignored) {
@@ -95,10 +92,11 @@ public class JobLogMover {
             String instanceOwner = context.getWorkflowUser();
             if (StringUtils.isNotBlank(instanceOwner)) {
                 CurrentUser.authenticate(instanceOwner);
+                CurrentUser.proxyDoAsUser(instanceOwner, HostnameFilter.get());
             } else {
                 CurrentUser.authenticate(System.getProperty("user.name"));
             }
-            OozieClient client = new OozieClient(engineUrl);
+            OozieClient client = OozieClientFactory.getClientRef(engineUrl);
             WorkflowJob jobInfo;
             try {
                 jobInfo = client.getJobInfo(context.getWorkflowId());
