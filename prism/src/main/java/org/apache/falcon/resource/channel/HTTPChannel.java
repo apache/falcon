@@ -80,7 +80,7 @@ public class HTTPChannel extends AbstractChannel {
     private String serviceName;
     private Class service;
 
-    /* Name of the HTTP cookie used for the authentication token between the client and the server.
+    /* Name of the HTTP cookie used for the authentication token between Prism and Falcon server.
      */
     private static final String AUTH_COOKIE = "hadoop.auth";
     private static final String AUTH_COOKIE_EQ = AUTH_COOKIE + "=";
