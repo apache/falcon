@@ -489,6 +489,26 @@ public class ProxyOozieClient extends AuthOozieClient {
     }
 
     @Override
+    public List<CoordinatorAction> reRunCoord(final String jobId, final String rerunType, final String scope,
+                                              final boolean refresh, final boolean noCleanup,
+                                              final boolean failed, final Properties props)
+        throws OozieClientException {
+        try {
+            return doAs(CurrentUser.getUser(), new Callable<List<CoordinatorAction>>() {
+
+                public List<CoordinatorAction> call() throws Exception {
+                    return ProxyOozieClient.super.reRunCoord(jobId, rerunType, scope, refresh, noCleanup, failed,
+                            props);
+                }
+            });
+        } catch (OozieClientException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new OozieClientException(e.toString(), e);
+        }
+    }
+
+    @Override
     public Void reRunBundle(final String jobId, final String coordScope, final String dateScope,
                             final boolean refresh, final boolean noCleanup)
         throws OozieClientException {
