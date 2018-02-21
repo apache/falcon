@@ -154,7 +154,6 @@ public class AuthenticationInitializationService implements FalconService {
     private static class TokenValidationThread extends TimerTask {
         @Override
         public void run() {
-
             try {
                 LOG.debug("Revalidating Auth Token at : {} with auth method {}", new Date(),
                         UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
