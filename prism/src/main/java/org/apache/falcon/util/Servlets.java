@@ -40,12 +40,12 @@ public final class Servlets {
      * @return the user
      */
     public static String getUserFromRequest(HttpServletRequest httpRequest) {
-        String user = httpRequest.getRemoteUser();
+        String user = httpRequest.getParameter("user.name"); // available in query-param
         if (!StringUtils.isEmpty(user)) {
             return user;
         }
 
-        user = httpRequest.getParameter("user.name"); // available in query-param
+        user = httpRequest.getRemoteUser();
         if (!StringUtils.isEmpty(user)) {
             return user;
         }
