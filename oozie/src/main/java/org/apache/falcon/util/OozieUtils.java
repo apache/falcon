@@ -25,6 +25,7 @@ import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.xerces.dom.ElementNSImpl;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -86,7 +87,7 @@ public final class OozieUtils {
             Unmarshaller unmarshaller = HIVE_ACTION_JAXB_CONTEXT.createUnmarshaller();
             unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
             return (JAXBElement<org.apache.falcon.oozie.hive.ACTION>)
-                unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+                unmarshaller.unmarshal((Node) wfAction.getAny());
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to unmarshall hive action.", e);
         }
@@ -111,7 +112,7 @@ public final class OozieUtils {
             Unmarshaller unmarshaller = SQOOP_ACTION_JAXB_CONTEXT.createUnmarshaller();
             unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
             return (JAXBElement<org.apache.falcon.oozie.sqoop.ACTION>)
-                    unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+                    unmarshaller.unmarshal((Node) wfAction.getAny());
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to unmarshall sqoop action.", e);
         }
@@ -135,7 +136,7 @@ public final class OozieUtils {
             Unmarshaller unmarshaller = SPARK_ACTION_JAXB_CONTEXT.createUnmarshaller();
             unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
             return (JAXBElement<org.apache.falcon.oozie.spark.ACTION>)
-                    unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+                    unmarshaller.unmarshal((Node) wfAction.getAny());
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to unmarshall spark action.", e);
         }
