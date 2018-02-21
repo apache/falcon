@@ -157,13 +157,15 @@ public class AuthenticationInitializationService implements FalconService {
             try {
                 LOG.debug("Revalidating Auth Token at : {} with auth method {}", new Date(),
                         UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
-                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+
+                // Relogin does not work in Hadoop 2.6 or 2.7 as isKeyTab check returns false
+                // UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+                // Do a regular loginUserFromKeytab, till the issue is addressed.
+                initializeKerberos();
             } catch (Throwable t) {
                 LOG.error("Error in Auth Token revalidation task: ", t);
                 GenericAlert.initializeKerberosFailed("Exception in Auth Token revalidation : ", t);
             }
         }
     }
-
-
 }
