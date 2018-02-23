@@ -39,7 +39,8 @@ public class EvictedInstanceSerDeTest {
 
     private EmbeddedCluster cluster;
     private FileSystem fs;
-    private Path csvFilePath;
+    private Path csvFilePathWithNoContent;
+    private Path csvFilePathWithContent;
     private StringBuffer evictedInstancePaths = new StringBuffer(
             "thrift://falcon-distcp-1.cs1cloud.internal:9083/default/retention_hours_7/year=2010")
             .append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR)
@@ -51,7 +52,8 @@ public class EvictedInstanceSerDeTest {
         String hdfsUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
 
         fs = FileSystem.get(cluster.getConf());
-        csvFilePath = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-01-00.csv");
+        csvFilePathWithNoContent = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-01-00.csv");
+        csvFilePathWithContent = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-02-00.csv");
     }
 
     @AfterClass
@@ -61,27 +63,27 @@ public class EvictedInstanceSerDeTest {
 
     @Test
     public void testSerializeEvictedInstancePathsForNoEviction() throws Exception {
-        EvictedInstanceSerDe.serializeEvictedInstancePaths(fs, csvFilePath, new StringBuffer());
+        EvictedInstanceSerDe.serializeEvictedInstancePaths(fs, csvFilePathWithNoContent, new StringBuffer());
 
-        Assert.assertEquals(readLogFile(csvFilePath),
+        Assert.assertEquals(readLogFile(csvFilePathWithNoContent),
                 EvictedInstanceSerDe.INSTANCEPATH_PREFIX);
     }
 
     @Test
     public void testSerializeEvictedInstancePathsWithEviction() throws Exception {
-        EvictedInstanceSerDe.serializeEvictedInstancePaths(fs, csvFilePath, evictedInstancePaths);
-        Assert.assertEquals(readLogFile(csvFilePath), evictedInstancePaths.toString());
+        EvictedInstanceSerDe.serializeEvictedInstancePaths(fs, csvFilePathWithContent, evictedInstancePaths);
+        Assert.assertEquals(readLogFile(csvFilePathWithContent), evictedInstancePaths.toString());
     }
 
     @Test(dependsOnMethods = "testSerializeEvictedInstancePathsForNoEviction")
     public void testDeserializeEvictedInstancePathsForNoEviction() throws Exception {
-        String[] instancePaths = EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, csvFilePath);
+        String[] instancePaths = EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, csvFilePathWithNoContent);
         Assert.assertEquals(instancePaths.length, 0);
     }
 
     @Test(dependsOnMethods = "testSerializeEvictedInstancePathsWithEviction")
     public void testDeserializeEvictedInstancePathsWithEviction() throws Exception {
-        String[] instancePaths = EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, csvFilePath);
+        String[] instancePaths = EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, csvFilePathWithContent);
         Assert.assertEquals(instancePaths.length, 2);
         Assert.assertTrue(instancePaths[0].equals(
                 "thrift://falcon-distcp-1.cs1cloud.internal:9083/default/retention_hours_7/year=2010"));
