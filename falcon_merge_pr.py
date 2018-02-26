@@ -35,7 +35,6 @@ import subprocess
 import sys
 import urllib.request, urllib.error, urllib.parse
 import getpass
-import jira.client
 
 try:
     import jira.client
