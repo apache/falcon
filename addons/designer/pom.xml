@@ -101,7 +101,7 @@
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
-        <hadoop.version>2.6.2</hadoop.version>
+        <hadoop.version>2.7.1</hadoop.version>
     </properties>
 
     <modules>
