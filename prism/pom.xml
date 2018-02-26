@@ -231,29 +231,29 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.7</version>
+                <version>1.10</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjweaver</artifactId>
-                        <version>1.8.6</version>
+                        <version>1.8.13</version>
                     </dependency>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjrt</artifactId>
-                        <version>1.8.6</version>
+                        <version>1.8.13</version>
                     </dependency>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjtools</artifactId>
-                        <version>1.8.6</version>
+                        <version>1.8.13</version>
                     </dependency>
                 </dependencies>
                 <configuration>
                     <verbose>true</verbose>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <complianceLevel>1.7</complianceLevel>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <complianceLevel>1.8</complianceLevel>
                     <includes>
                         <include>org/apache/falcon/resource/proxy/SchedulableEntityManagerProxy.java</include>
                         <include>org/apache/falcon/resource/proxy/InstanceManagerProxy.java</include>
