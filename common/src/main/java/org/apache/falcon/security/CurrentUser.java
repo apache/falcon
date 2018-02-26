@@ -72,10 +72,8 @@ public final class CurrentUser {
      *
      * @param doAsUser doAs user
      * @param proxyHost proxy host
-     * @throws IOException
      */
-    public static void proxyDoAsUser(final String doAsUser,
-                                     final String proxyHost) throws IOException {
+    public static void proxyDoAsUser(final String doAsUser, final String proxyHost) {
         if (!isAuthenticated()) {
             throw new IllegalStateException("Authentication not done");
         }
@@ -106,10 +104,8 @@ public final class CurrentUser {
      *
      * @param aclOwner entity acl owner
      * @param aclGroup entity acl group
-     * @throws IOException
      */
-    public static void proxy(final String aclOwner,
-                             final String aclGroup) throws IOException {
+    public static void proxy(final String aclOwner, final String aclGroup) {
         if (!isAuthenticated() || StringUtils.isEmpty(aclOwner)) {
             throw new IllegalStateException("Authentication not done or Bad user name");
         }
