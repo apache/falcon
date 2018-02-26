@@ -66,7 +66,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             Long wait = getEventDelay(entity, nominalTime);
             if (wait == -1) {
                 LOG.info("Late rerun expired for entity: {} ({})", entityType, entityName);
-                AbstractWorkflowEngine wfEngine = this.getWfEngine(entityType, entityName);
+                AbstractWorkflowEngine wfEngine = this.getWfEngine(entityType, entityName, entity.getACL().getOwner());
                 java.util.Properties properties = wfEngine.getWorkflowProperties(cluster, wfId);
                 String logDir = properties.getProperty("logDir");
                 String srcClusterName = properties.getProperty("srcClusterName");

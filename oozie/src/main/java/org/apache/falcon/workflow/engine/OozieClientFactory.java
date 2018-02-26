@@ -55,7 +55,7 @@ public final class OozieClientFactory {
         return get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
     }
 
-    private static OozieClient getClientRef(String oozieUrl)
+    public static OozieClient getClientRef(String oozieUrl)
         throws FalconException {
 
         if (OozieConstants.LOCAL_OOZIE.equals(oozieUrl)) {
