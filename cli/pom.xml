@@ -155,6 +155,12 @@
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.falcon</groupId>
+                    <artifactId>falcon-metrics</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
