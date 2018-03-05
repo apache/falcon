@@ -93,7 +93,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <include.prism>true</include.prism>
-        <hadoop.version>2.6.2</hadoop.version>
+        <hadoop.version>2.7.1</hadoop.version>
         <slf4j.version>1.7.5</slf4j.version>
         <oozie.version>4.2.0</oozie.version>
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
