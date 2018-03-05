@@ -9,6 +9,10 @@ This product includes JMS specifications (https://javaee.github.io/jms-spec/)
  which is distributed under the Common Development and Distribution License
  (https://javaee.github.io/jms-spec/LICENSE)
 
+This product includes Metro mimepull (https://javaee.github.io/metro-mimepull)
+ which is distributed under the Common Development and Distribution License
+ (https://github.com/javaee/metro-mimepull/blob/master/LICENSE)
+
 *****************
 CC BY-SA 3.0
 *****************
