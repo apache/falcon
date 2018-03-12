@@ -1,0 +1,15 @@
+---+++Submit
+
+[[CommonCLI][Common CLI Options]]
+
+Submit an extension job.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -submit -extensionName <<extension-name>> -jobName <<job-name>> -file <<path-to-file>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionSubmit.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -submit -extensionName hdfs-mirroring -file /data/hdfs-mirroring-para.txt

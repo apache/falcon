@@ -1,0 +1,12 @@
+---+++ Vertex Edges
+
+[[CommonCLI][Common CLI Options]]
+
+Get the adjacent vertices or edges of the vertex with the specified direction.
+
+Usage:
+$FALCON_HOME/bin/falcon metadata -edges -id <<vertex-id>> -direction <<direction>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -edges -id 4 -direction both
+$FALCON_HOME/bin/falcon metadata -edges -id 4 -direction inE

@@ -1,0 +1,90 @@
+---+Building & Installing Falcon
+
+
+---++Building Falcon
+
+---+++Prerequisites
+
+   * JDK 1.7/1.8
+   * Maven 3.2.x
+
+
+
+---+++Step 1 - Clone the Falcon repository
+
+<verbatim>
+$git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
+</verbatim>
+
+
+---+++Step 2 - Build Falcon
+
+<verbatim>
+$ cd falcon
+$ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify"
+$ mvn clean install 
+
+</verbatim>
+It builds and installs the package into the local repository, for use as a dependency in other projects locally.
+
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+
+*Note 1:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+          Falcon build with JDK 1.7 using -noverify option
+
+*Note 2:* To compile Falcon with addon extensions, append additional profiles to build command using syntax -P<<profile1,profile2>>
+          For Hive Mirroring extension, use profile"hivedr". Hive >= 1.2.0 and Oozie >= 4.2.0 is required
+          For HDFS Snapshot mirroring extension, use profile "hdfs-snapshot-mirroring". Hadoop >= 2.7.0 is required
+          For ADF integration, use profile "adf"
+
+---+++Step 3 - Package and Deploy Falcon
+
+Once the build successfully completes, artifacts can be packaged for deployment using the assembly plugin. The Assembly
+Plugin for Maven is primarily intended to allow users to aggregate the project output along with its dependencies,
+modules, site documentation, and other files into a single distributable archive. There are two basic ways in which you
+can deploy Falcon - Embedded mode(also known as Stand Alone Mode) and Distributed mode. Your next steps will vary based
+on the mode in which you want to deploy Falcon.
+
+*NOTE* : Oozie is being extended by Falcon (particularly on el-extensions) and hence the need for Falcon to build &
+re-package Oozie, so that users of Falcon can work with the right Oozie setup. Though Oozie is packaged by Falcon, it
+needs to be deployed separately by the administrator and is not auto deployed along with Falcon.
+
+
+---++++Embedded/Stand Alone Mode
+Embedded mode is useful when the Hadoop jobs and relevant data processing involve only one Hadoop cluster. In this mode
+ there is a single Falcon server that contacts the scheduler to schedule jobs on Hadoop. All the process/feed requests
+ like submit, schedule, suspend, kill etc. are sent to this server. For running Falcon in this mode one should use the
+ Falcon which has been built using standalone option. You can find the instructions for Embedded mode setup
+ [[Embedded-mode][here]].
+
+
+---++++Distributed Mode
+Distributed mode is for multiple (colos) instances of Hadoop clusters, and multiple workflow schedulers to handle them.
+In this mode Falcon has 2 components: Prism and Server(s). Both Prism and Server(s) have their own their own config
+locations(startup and runtime properties). In this mode Prism acts as a contact point for Falcon servers. While
+ all commands are available through Prism, only read and instance api's are available through Server. You can find the
+ instructions for Distributed Mode setup [[Distributed-mode][here]].
+
+
+
+---+++Preparing Oozie and Falcon packages for deployment
+<verbatim>
+$cd <<project home>>
+$src/bin/package.sh <<hadoop-version>> <<oozie-version>>
+
+>> ex. src/bin/package.sh 1.1.2 4.0.1 or src/bin/package.sh 0.20.2-cdh3u5 4.0.1
+>> ex. src/bin/package.sh 2.5.0 4.0.0
+>> Falcon package is available in <<falcon home>>/target/apache-falcon-<<version>>-bin.tar.gz
+>> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
+>> __IMPORTANT:  You need to download the je-5.0.73 version from http://download.oracle.com/otn/berkeley-db/je-5.0.73.zip and extract je-5.0.73 under the Falcon webapp directory or provision an HBase cluster for use as Falcon graphdb backend DB.
+    Depending on the Graphdb backend choice, update the startup.properties appropriately.__
+</verbatim>
+
+*NOTE:* If you have a separate Apache Oozie installation, you will need to follow some additional steps:
+   1. Once you have setup the Falcon Server, copy libraries under {falcon-server-dir}/oozie/libext/ to {oozie-install-dir}/libext.
+   1. Modify Oozie's configuration file. Copy all Falcon related properties from {falcon-server-dir}/oozie/conf/oozie-site.xml to {oozie-install-dir}/conf/oozie-site.xml
+   1. Restart oozie:
+      1. cd {oozie-install-dir}
+      1. sudo -u oozie ./bin/oozie-stop.sh
+      1. sudo -u oozie ./bin/oozie-setup.sh prepare-war
+      1. sudo -u oozie ./bin/oozie-start.sh

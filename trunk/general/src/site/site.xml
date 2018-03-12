@@ -158,6 +158,7 @@
         </menu>
 
         <menu name="Releases">
+            <item name="0.11" href="http://www.apache.org/dyn/closer.lua/falcon/0.11"/>
             <item name="0.10" href="http://www.apache.org/dyn/closer.lua/falcon/0.10"/>
             <item name="0.9" href="http://www.apache.org/dyn/closer.lua/falcon/0.9"/>
             <item name="0.8" href="http://www.apache.org/dyn/closer.lua/falcon/0.8"/>
@@ -172,7 +173,8 @@
 
         <menu name="Documentation">
             <!-- current points to latest release -->
-            <item name="0.10 (Current)" href="./0.10/index.html"/>
+            <item name="0.11 (Current)" href="./0.11/index.html"/>
+            <item name="0.10" href="./0.10/index.html"/>
             <item name="0.9" href="./0.9/index.html"/>
             <item name="0.8" href="./0.8/index.html"/>
             <item name="0.7" href="./0.7/index.html"/>
@@ -191,7 +193,7 @@
         </menu>
 
         <footer>
-            Â© 2011-2016 The Apache Software Foundation. Apache Falcon, Falcon, Apache, the Apache feather logo,
+            Â© 2011-2018 The Apache Software Foundation. Apache Falcon, Falcon, Apache, the Apache feather logo,
             and the Apache Falcon project logo are trademarks of The Apache Software Foundation.
         </footer>
     </body>

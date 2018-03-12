@@ -1,0 +1,8 @@
+---+++Suspend
+
+[[CommonCLI][Common CLI Options]]
+
+Suspend on an entity results in suspension of the oozie bundle that was scheduled earlier through the schedule function. No further instances are executed on a suspended entity. Only schedule-able entities(process/feed) can be suspended.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -suspend

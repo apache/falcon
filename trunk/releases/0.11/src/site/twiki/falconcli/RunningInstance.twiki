@@ -1,0 +1,13 @@
+---+++Running
+
+[[CommonCLI][Common CLI Options]]
+
+Running option provides all the running instances of the mentioned process.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -running
+
+Optional Args : -colo <<colo>> -lifecycle <<lifecycles>>
+-filterBy <<field1:value1,field2:value2>> -orderBy <<field>> -sortOrder <<sortOrder>> -offset 0 -numResults 10
+
+<a href="../Restapi/InstanceRunning.html">Optional params described here.</a>

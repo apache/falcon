@@ -1,0 +1,15 @@
+---+++Resume
+
+[[CommonCLI][Common CLI Options]]
+
+Resume an extension job.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -resume -jobName <<extension-job-name>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionResume.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -resume -jobName sales-monthly

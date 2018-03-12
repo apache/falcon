@@ -1,0 +1,12 @@
+---+++Lookup
+
+[[CommonCLI][Common CLI Options]]
+
+Lookup option tells you which feed does a given path belong to. This can be useful in several scenarios e.g. generally you would want to have a single definition for common feeds like metadata with same location
+otherwise it can result in a problem (different retention durations can result in surprises for one team) If you want to check if there are multiple definitions of same metadata then you can pick
+an instance of that and run through the lookup command like below.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type feed -lookup -path /data/projects/my-hourly/2014/10/10/23/
+
+If you have multiple feeds with location as /data/projects/my-hourly/${YEAR}/${MONTH}/${DAY}/${HOUR} then this command will return all of them.

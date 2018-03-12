@@ -1,0 +1,52 @@
+---+Back Log Emitter Service
+
+Back Log Emitter service keeps track of all the process which have missed an SLA for a particular time and calculates backlog. Once a notification comes that process has completed, it updates the backlog. This service keeps on sending data to Graphite for each process which is missing SLA.
+
+The emission and calculation of backlog are controlled by the below properties in startup.properties :
+
+<verbatim>
+*.falcon.backlog.metricservice.emit.interval.millisecs=60000
+*.falcon.backlog.metricservice.recheck.interval.millisecs=60000
+</verbatim>
+
+---+How Backlog is Calculated
+
+Back Log Emitter Service is a listener to :
+
+   1. EntitySLAAlertService
+   1. !WorkflowExecutionListener
+
+
+EntitySLAListeners service notifies !BacklogEmitter whenever a process misses its shouldEndIn sla.
+
+!WorkflowExecutionListener notifies !BacklogEmitter service whenever a process get completed.
+
+
+*Back Log Calculation:*
+
+If two instances of hourly process p1 have missed SLA for 4th and 5th hour then in 6th hourbacklog for process p1 will be ((6-4) + (6-5))*60 = 180 mins. It is cumulative in nature.
+
+---+Dependencies :
+
+*Other Services :*
+
+Following services and listeners should be enabled for Backlog Emitter Service in startup.properties:
+
+<verbatim>
+##Add if you want to enable BacklogMetricService
+#                        org.apache.falcon.service.FalconJPAService,\
+#                        org.apache.falcon.metrics.MetricNotificationService,\
+#                        org.apache.falcon.service.EntitySLAMonitoringService,\
+#                        org.apache.falcon.service.EntitySLAAlertService,\
+#                        org.apache.falcon.service.BacklogMetricEmitterService
+
+*.entityAlert.listeners=org.apache.falcon.service.BacklogMetricEmitterService
+
+*.workflow.execution.listeners=org.apache.falcon.handler.SLAMonitoringHandler
+</verbatim>
+
+
+
+*Falcon Database :*
+Back Log Emitter Service maintains its state in the database. It needs one table *BACKLOG_METRIC* please have a look at [[FalconDatabase]] to know how to create it.
+

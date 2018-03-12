@@ -1,0 +1,8 @@
+---+++Definition
+
+[[CommonCLI][Common CLI Options]]
+
+Definition option returns the entity definition submitted earlier during submit step.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type [cluster|datasource|feed|process] -name <<name>> -definition

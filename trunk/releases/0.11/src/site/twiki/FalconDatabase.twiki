@@ -1,0 +1,74 @@
+---+++ Configuring the state store for Falcon
+You can configure statestore by making changes to __$FALCON_HOME/conf/statestore.properties__ as follows. You will need to restart Falcon Server for the changes to take effect.
+
+Falcon Server needs to maintain state of the entities and instances in a persistent store for the system to be recoverable. Since Prism only federates, it does not need to maintain any state information. Following properties need to be set in statestore.properties of Falcon Servers:
+<verbatim>
+######### StateStore Properties #####
+*.falcon.state.store.impl=org.apache.falcon.state.store.jdbc.JDBCStateStore
+*.falcon.statestore.jdbc.driver=org.apache.derby.jdbc.EmbeddedDriver
+*.falcon.statestore.jdbc.url=jdbc:derby:data/falcon.db
+# StateStore credentials file where username,password and other properties can be stored securely.
+# Set this credentials file permission 400 ;the user who starts falcon should only have read permission.
+# Give Absolute path to credentials file along with file name or put in classpath with file name statestore.credentials.
+# Credentials file should be present either in given location or class path, otherwise falcon won't start.
+*.falcon.statestore.credentials.file=
+*.falcon.statestore.jdbc.username=sa
+*.falcon.statestore.jdbc.password=
+*.falcon.statestore.connection.data.source=org.apache.commons.dbcp.BasicDataSource
+# Maximum number of active connections that can be allocated from this pool at the same time.
+*.falcon.statestore.pool.max.active.conn=10
+*.falcon.statestore.connection.properties=
+# Indicates the interval (in milliseconds) between eviction runs.
+*.falcon.statestore.validate.db.connection.eviction.interval=300000
+## The number of objects to examine during each run of the idle object evictor thread.
+*.falcon.statestore.validate.db.connection.eviction.num=10
+## Creates Falcon DB.
+## If set to true, Falcon creates the DB schema if it does not exist. If the DB schema exists is a NOP.
+## If set to false, Falcon does not create the DB schema. If the DB schema does not exist it fails start up.
+*.falcon.statestore.create.db.schema=true
+</verbatim>
+
+The _*.falcon.statestore.jdbc.url_ property in statestore.properties determines the DB and data location. All other properties are common across RDBMS.
+
+*NOTE : Although multiple Falcon Servers can share a DB (not applicable for Derby DB), it is recommended that you have different DBs for different Falcon Servers for better performance.*
+
+You will need to create the state DB and tables before starting the Falcon Server. To create tables, a tool comes bundled with the Falcon installation. You can use the _falcon-db.sh_ script to create tables in the DB. The script needs to be run only for Falcon Servers and can be run by any user that has execute permission on the script. The script picks up the DB connection details from __$FALCON_HOME/conf/statestore.properties__. Ensure that you have granted the right privileges to the user mentioned in statestore.properties_, so the tables can be created.
+
+You can use the help command to get details on the sub-commands supported:
+<verbatim>
+./bin/falcon-db.sh help
+usage:
+      Falcon DB initialization tool currently supports Derby DB/ Mysql
+
+      falcondb help : Display usage for all commands or specified command
+
+      falcondb version : Show Falcon DB version information
+
+      falcondb create <OPTIONS> : Create Falcon DB schema
+                      -run             Confirmation option regarding DB schema creation/upgrade
+                      -sqlfile <arg>   Generate SQL script instead of creating/upgrading the DB
+                                       schema
+
+      falcondb upgrade <OPTIONS> : Upgrade Falcon DB schema
+                       -run             Confirmation option regarding DB schema creation/upgrade
+                       -sqlfile <arg>   Generate SQL script instead of creating/upgrading the DB
+                                        schema
+
+</verbatim>
+Currently, MySQL, postgreSQL and Derby are supported as state stores. We may extend support to other DBs in the future. Falcon has been tested against MySQL v5.5 and PostgreSQL v9.5. If you are using MySQL ensure you also copy mysql-connector-java-<version>.jar under __$FALCON_HOME/server/webapp/falcon/WEB-INF/lib__ and __$FALCON_HOME/client/lib__
+
+---++++ Using Derby as the State Store
+Using Derby is ideal for QA and staging setup. Falcon comes bundled with a Derby connector and no explicit setup is required (although you can set it up) in terms creating the DB or tables.
+For example,
+ <verbatim> *.falcon.statestore.jdbc.url=jdbc:derby:data/falcon.db;create=true </verbatim>
+
+ tells Falcon to use the Derby JDBC connector, with data directory, $FALCON_HOME/data/ and DB name 'falcon'. If _create=true_ is specified, you will not need to create a DB up front; a database will be created if it does not exist.
+
+---++++ Using MySQL as the State Store
+The jdbc.url property in statestore.properties determines the DB and data location.
+For example,
+ <verbatim> *.falcon.statestore.jdbc.url=jdbc:mysql://localhost:3306/falcon </verbatim>
+
+ tells Falcon to use the MySQL JDBC connector, which is accessible @localhost:3306, with DB name 'falcon'.
+
+ Note: First time we have to manually create the schema in production as we have set falcon.statestore.create.db.schema = false

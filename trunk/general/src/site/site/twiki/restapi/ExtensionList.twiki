@@ -1,0 +1,34 @@
+---++  GET api/extension/list/:extension-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+List jobs generated from an extension.
+
+---++ Parameters
+   * :extension-name Name of the extension.
+   * sortOrder <optional> Sort order by job name. Valid options: "asc" (default) and "desc".
+   * doAs <optional> Impersonate the user.
+
+---++ Results
+Total number of results and a list of jobs implementing the given extension.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/extension/list/billCollection
+</verbatim>
+---+++ Result
+<verbatim>
+{
+  "numJobs":"2",
+  "jobs":{
+    "job": [
+      {"daily-health-bill"},
+      {"fsa-bill"}
+    ]
+  }
+}
+</verbatim>

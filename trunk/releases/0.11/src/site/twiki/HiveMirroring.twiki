@@ -1,0 +1,63 @@
+---+Hive Mirroring
+
+---++Overview
+Falcon provides feature to replicate Hive metadata and data events from source cluster to destination cluster. This is supported for both secure and unsecure cluster through Falcon extensions.
+
+---++Prerequisites
+Following is the prerequisites to use Hive Mirrroring
+
+   * *Hive 1.2.0+*
+   * *Oozie 4.2.0+*
+
+*Note:* Set following properties in hive-site.xml for replicating the Hive events on source and destination Hive cluster:
+<verbatim>
+    <property>
+        <name>hive.metastore.event.listeners</name>
+        <value>org.apache.hive.hcatalog.listener.DbNotificationListener</value>
+        <description>event listeners that are notified of any metastore changes</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.dml.events</name>
+        <value>true</value>
+    </property>
+</verbatim>
+
+---++ Use Case
+* Replicate data/metadata of Hive DB & table from source to target cluster
+
+---++ Limitations
+* Currently Hive doesn't support create database, roles, views, offline tables, direct HDFS writes without registering with metadata and Database/Table name mapping replication events. Hence Hive mirroring extension cannot be used to replicate above mentioned events between warehouses.
+
+---++ Usage
+---+++ Bootstrap
+   Perform initial bootstrap of Table and Database from source cluster to destination cluster
+   * *Database Bootstrap*
+     For bootstrapping DB replication, first destination DB should be created. This step is expected,
+     since DB replication definitions can be set up by users only on pre-existing DB’s. Second, Export all tables in
+     the source db and Import it in the destination db, as described in Table bootstrap.
+
+   * *Table Bootstrap*
+     For bootstrapping table replication, essentially after having turned on the !DbNotificationListener
+     on the source db, perform an Export of the table, distcp the Export over to the destination
+     warehouse and do an Import over there. Check the following [[https://cwiki.apache.org/confluence/display/Hive/LanguageManual+ImportExport][Hive Export-Import]] for syntax details
+     and examples.
+     This will set up the destination table so that the events on the source cluster that modify the table
+     will then be replicated.
+
+---+++  Setup source and destination clusters
+   <verbatim>
+    $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
+   </verbatim>
+
+---+++ Hive mirroring extension properties
+   Extension artifacts are expected to be installed on HDFS at the path specified by "extension.store.uri" in startup properties. hive-mirroring-properties.json file located at "<extension.store.uri>/hive-mirroring/META/hive-mirroring-properties.json" lists all the required and optional parameters/arguments for scheduling Hive mirroring job.
+
+---+++ Submit and schedule Hive mirroring extension
+
+   <verbatim>
+    $FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName hive-mirroring -file /process/definition.xml
+   </verbatim>
+
+   Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details on usage of CLI and REST API's.
+

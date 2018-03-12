@@ -1,0 +1,15 @@
+---+++SubmitAndSchedule
+
+[[CommonCLI][Common CLI Options]]
+
+Submit and schedule an extension job.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName <<extension-name>> -jobName <<job-name>> -file <<path-to-file>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionSubmitAndSchedule.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName hdfs-mirroring -file /data/hdfs-mirroring-para.txt

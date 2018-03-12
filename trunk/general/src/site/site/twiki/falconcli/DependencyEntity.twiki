@@ -1,0 +1,10 @@
+---+++Dependency
+
+[[CommonCLI][Common CLI Options]]
+
+With the use of dependency option, we can list all the entities on which the specified entity is dependent.
+For example for a feed, dependency return the cluster name and for process it returns all the input feeds,
+output feeds and cluster names.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type [cluster|datasource|feed|process] -name <<name>> -dependency

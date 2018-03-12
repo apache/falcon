@@ -1,0 +1,29 @@
+---++  POST api/extension/resume/:job-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Resume an extension job.
+
+---++ Parameters
+   * :job-name Name of the extension job.
+   * doAs <optional> Impersonate the user.
+
+---++ Results
+Result of the resume operation.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/extension/resume/sales-monthly
+</verbatim>
+---+++ Result
+<verbatim>
+{
+  "requestId": "e5cc8230-f356-4566-9b65-536abdff8aa3",
+  "message": "Extension job sales-monthly resumed successfully",
+  "status": "SUCCEEDED"
+}
+</verbatim>

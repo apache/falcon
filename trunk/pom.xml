@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-website</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.12-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache Falcon</name>
@@ -318,6 +318,16 @@
                 <role>committer</role>
             </roles>
             <organization>Hortonworks</organization>
+        </developer>
+	<developer>
+            <id>sandeeps</id>
+            <name>Sandeep samudrala</name>
+            <email>sandeeps@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Inmobi</organization>
         </developer>
 
     </developers>

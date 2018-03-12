@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-website</artifactId>
-        <version>0.11-SNAPSHOT</version>
+        <version>0.12-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-website-releases</artifactId>
     <version>0.2</version>
@@ -40,6 +40,7 @@
         <module>0.8</module>
         <module>0.9</module>
         <module>0.10</module>
+        <module>0.11</module>
     </modules>
 
 </project>

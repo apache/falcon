@@ -1,0 +1,11 @@
+---+++ Vertex
+
+[[CommonCLI][Common CLI Options]]
+
+Get the vertex with the specified id.
+
+Usage:
+$FALCON_HOME/bin/falcon metadata -vertex -id <<id>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -vertex -id 4

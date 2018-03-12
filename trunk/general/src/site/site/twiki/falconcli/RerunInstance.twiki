@@ -1,0 +1,10 @@
+---+++Rerun
+
+[[CommonCLI][Common CLI Options]]
+
+Rerun option is used to rerun instances of a given process. On issuing a rerun, by default the execution resumes from the last failed node in the workflow. This option is valid only for process instances in terminal state, i.e. SUCCEEDED, KILLED or FAILED.
+If one wants to forcefully rerun the entire workflow, -force should be passed along with -rerun
+Additionally, you can also specify properties to override via a properties file.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -rerun -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-force] [-file <<properties file>>]
