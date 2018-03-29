@@ -69,6 +69,16 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
     @Override
     protected boolean shouldCopy(Path path, DistCpOptions options) {
+        return shouldCopy(path);
+    }
+
+    /**
+     * From hadoop 2.8.0 onwards, the function signature has been changed to not use DistCpOptions.
+     * hence added another function that works with the new implementation.
+     *
+     * Preserving previous implementation as well for backward compatibility.
+     */
+    protected boolean shouldCopy(Path path) {
         if (path.getName().equals(availabilityFlag)) {
             return false;
         }
