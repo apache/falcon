@@ -565,14 +565,16 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         //now obtain locks for all dependent entities if any.
         Set<Entity> affectedEntities = EntityGraph.get().getDependents(entity);
         for (Entity e : affectedEntities) {
-            if (memoryLocks.acquireLock(e, command)) {
-                tokenList.add(e);
-                LOG.debug("{} on entity {} has acquired lock on {}", command, entity, e);
-            } else {
-                LOG.error("Error while trying to acquire lock on {}. Releasing already obtained locks",
-                        e.toShortString());
-                throw new FalconException("There are multiple update commands running for dependent entity "
-                        + e.toShortString());
+            if (e.getEntityType() != EntityType.CLUSTER) {
+                if (memoryLocks.acquireLock(e, command)) {
+                    tokenList.add(e);
+                    LOG.debug("{} on entity {} has acquired lock on {}", command, entity, e);
+                } else {
+                    LOG.error("Error while trying to acquire lock on {}. Releasing already obtained locks",
+                            e.toShortString());
+                    throw new FalconException("There are multiple update commands running for dependent entity "
+                            + e.toShortString());
+                }
             }
         }
     }
