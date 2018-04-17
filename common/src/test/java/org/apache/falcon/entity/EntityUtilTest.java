@@ -395,6 +395,7 @@ public class EntityUtilTest extends AbstractTestBase {
         }
 
         Assert.assertEquals(EntityUtil.isStagingPath(cluster, process, path), expected);
+        fs.delete(path);
     }
 
     @DataProvider(name = "bundlePaths")
