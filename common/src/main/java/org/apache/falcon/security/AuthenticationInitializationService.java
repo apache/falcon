@@ -64,6 +64,7 @@ public class AuthenticationInitializationService implements FalconService {
      * Constant for the configuration property that indicates the authentication token validity time in seconds.
      */
     protected static final String AUTH_TOKEN_VALIDITY_SECONDS = CONFIG_PREFIX + "token.validity";
+    private static UserGroupInformation loginUser;
 
     private Timer timer = new Timer();
     private static final String SERVICE_NAME = "Authentication initialization service";
@@ -125,6 +126,7 @@ public class AuthenticationInitializationService implements FalconService {
             UserGroupInformation.loginUserFromKeytab(principal, keytabFilePath);
 
             LOG.info("Got Kerberos ticket, keytab: {}, Falcon principal: {}", keytabFilePath, principal);
+            loginUser = UserGroupInformation.getLoginUser();
         } catch (Exception ex) {
             throw new FalconException("Could not initialize " + SERVICE_NAME
                     + ": " + ex.getMessage(), ex);
@@ -149,6 +151,10 @@ public class AuthenticationInitializationService implements FalconService {
     @Override
     public void destroy() throws FalconException {
         timer.cancel();
+    }
+
+    public static UserGroupInformation getLoginUser() {
+        return loginUser;
     }
 
     private static class TokenValidationThread extends TimerTask {

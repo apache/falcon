@@ -20,6 +20,7 @@ package org.apache.falcon.oozie.workflow;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.FalconPostProcessing;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -59,6 +60,7 @@ public class FalconPostProcessingTest {
 
     @BeforeClass
     public void setup() throws Exception {
+        CurrentUser.authenticate(System.getProperty("user.name"));
         args = new String[]{
             "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
             "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeedNames, ","),

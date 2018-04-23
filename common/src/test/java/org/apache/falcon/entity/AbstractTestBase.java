@@ -204,6 +204,7 @@ public class AbstractTestBase {
     }
 
     public void setup() throws Exception {
+        CurrentUser.authenticate(System.getProperty("user.name"));
         store = ConfigurationStore.get();
         for (EntityType type : EntityType.values()) {
             for (String name : store.getEntities(type)) {
