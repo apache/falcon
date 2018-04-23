@@ -170,7 +170,8 @@ public final class HadoopClientFactory {
             UserGroupInformation ugi = getProxyUser(CurrentUser.getUser());
             return createDistributedFileSystem(ugi, new URI(nameNode), conf);
         } catch (Exception e) {
-            throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode, e);
+            throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode +
+                    " for user: " + CurrentUser.getUser(), e);
         }
     }
 
@@ -196,7 +197,8 @@ public final class HadoopClientFactory {
             UserGroupInformation ugi = getProxyUser(CurrentUser.getUser());
             return createFileSystem(ugi, uri, conf);
         } catch (IOException e) {
-            throw new FalconException("Unable to get Proxy user for " + CurrentUser.getUser(), e);
+            throw new FalconException("Exception while getting Proxied FileSystem for: " + uri +
+                    " for user: " + CurrentUser.getUser(), e);
         }
     }
 
