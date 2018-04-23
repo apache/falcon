@@ -57,7 +57,7 @@ public class DataAvailabilityServiceTest extends AbstractTestBase {
         dataAvailabilityService.init();
     }
 
-    //@Test
+    @Test
     public void testDataNotificationServiceWithVaryingRequests() throws IOException,
             FalconException, InterruptedException {
         FileSystem fs = FileSystem.get(conf);

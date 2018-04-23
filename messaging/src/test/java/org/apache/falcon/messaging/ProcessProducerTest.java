@@ -20,7 +20,6 @@ package org.apache.falcon.messaging;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -57,7 +56,6 @@ public class ProcessProducerTest {
 
     @BeforeClass
     public void setup() throws Exception {
-        CurrentUser.authenticate(System.getProperty("user.name"));
         args = new String[] {
             "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
             "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeedNames, ","),

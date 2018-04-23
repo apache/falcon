@@ -37,7 +37,6 @@ import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -107,7 +106,6 @@ public class FalconUnitTestBase {
 
     @BeforeClass
     public void setup() throws Exception {
-        CurrentUser.authenticate(System.getProperty("user.name"));
         FalconUnit.start(true);
         falconUnitClient = FalconUnit.getClient();
         fs = (JailedFileSystem) FalconUnit.getFileSystem();
