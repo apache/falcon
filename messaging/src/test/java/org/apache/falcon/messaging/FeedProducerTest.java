@@ -35,6 +35,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -73,6 +74,7 @@ public class FeedProducerTest {
     @BeforeClass
     public void setup() throws Exception {
 
+        CurrentUser.authenticate(System.getProperty("user.name"));
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         conf = dfsCluster.getConf();
         logFile = new Path(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY),

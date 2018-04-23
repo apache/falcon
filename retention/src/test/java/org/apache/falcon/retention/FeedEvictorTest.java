@@ -23,6 +23,7 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -60,6 +61,7 @@ public class FeedEvictorTest {
 
     @BeforeClass
     public void start() throws Exception {
+        CurrentUser.authenticate(System.getProperty("user.name"));
         cluster = EmbeddedCluster.newCluster("test");
         hdfsUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
         FeedEvictor.OUT.set(stream);

@@ -231,22 +231,22 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.7</version>
+                <version>1.10</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjweaver</artifactId>
-                        <version>1.8.6</version>
+                        <version>1.8.13</version>
                     </dependency>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjrt</artifactId>
-                        <version>1.8.6</version>
+                        <version>1.8.13</version>
                     </dependency>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjtools</artifactId>
-                        <version>1.8.6</version>
+                        <version>1.8.13</version>
                     </dependency>
                 </dependencies>
                 <configuration>
@@ -309,8 +309,8 @@
                             <goal>docs</goal>
                         </goals>
                         <configuration>
-                            <source>1.7</source>
-                            <target>1.7</target>
+                            <source>1.8</source>
+                            <target>1.8</target>
                             <configFile>enunciate.xml</configFile>
                             <!-- the directory where to put the docs -->
                             <docsDir>${project.build.directory}/restapi/docs</docsDir>

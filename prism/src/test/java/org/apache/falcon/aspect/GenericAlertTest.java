@@ -29,5 +29,11 @@ public class GenericAlertTest {
         GenericAlert.instrumentFailedInstance("cluster", "process", "agg-coord", "120:df",
                 "ef-id", "wf-user", "1", "DELETE", "now", "error", "none", 1242);
     }
+
+    @Test
+    public void testRecordAudit() throws Exception {
+        GenericAlert.audit("who", "fromAddress", "fromHost", "whatURL",
+                "whatAddrs", "whenISO9601");
+    }
 }
 

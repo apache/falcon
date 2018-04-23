@@ -20,6 +20,7 @@ package org.apache.falcon.workflow;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.process.EngineType;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -60,6 +61,7 @@ public class WorkflowJobEndNotificationServiceTest implements WorkflowExecutionL
 
     @BeforeClass
     public void setUp() throws Exception {
+        CurrentUser.authenticate(System.getProperty("user.name"));
         service = new WorkflowJobEndNotificationService();
         savedContext = WorkflowExecutionContext.create(getTestMessageArgs(),
                 WorkflowExecutionContext.Type.POST_PROCESSING);

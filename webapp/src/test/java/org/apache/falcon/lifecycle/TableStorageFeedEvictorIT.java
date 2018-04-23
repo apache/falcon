@@ -24,6 +24,7 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.retention.FeedEvictor;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.HiveTestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -85,6 +86,7 @@ public class TableStorageFeedEvictorIT {
 
     @BeforeClass
     public void setUp() throws Exception {
+        CurrentUser.authenticate(System.getProperty("user.name"));
         FeedEvictor.OUT.set(stream);
 
         client = TestContext.getHCatClient(METASTORE_URL);
