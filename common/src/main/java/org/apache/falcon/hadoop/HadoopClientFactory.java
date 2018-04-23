@@ -167,11 +167,11 @@ public final class HadoopClientFactory {
 
         String nameNode = getNameNode(conf);
         try {
-            UserGroupInformation ugi = getProxyUser(CurrentUser.getUser());
+            UserGroupInformation ugi = CurrentUser.isAuthenticated()
+                    ? getProxyUser(CurrentUser.getUser()) : UserGroupInformation.getCurrentUser();
             return createDistributedFileSystem(ugi, new URI(nameNode), conf);
         } catch (Exception e) {
-            throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode +
-                    " for user: " + CurrentUser.getUser(), e);
+            throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode, e);
         }
     }
 
@@ -194,11 +194,11 @@ public final class HadoopClientFactory {
                                               final Configuration conf) throws FalconException {
         Validate.notNull(uri, "uri cannot be null");
         try {
-            UserGroupInformation ugi = getProxyUser(CurrentUser.getUser());
+            UserGroupInformation ugi = CurrentUser.isAuthenticated()
+                    ? getProxyUser(CurrentUser.getUser()) : UserGroupInformation.getCurrentUser();
             return createFileSystem(ugi, uri, conf);
         } catch (IOException e) {
-            throw new FalconException("Exception while getting Proxied FileSystem for: " + uri +
-                    " for user: " + CurrentUser.getUser(), e);
+            throw new FalconException("Exception while getting Proxied FileSystem for: " + uri, e);
         }
     }
 

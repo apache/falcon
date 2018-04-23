@@ -27,7 +27,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -69,7 +68,6 @@ public class JMSMessageConsumerTest {
 
     @BeforeMethod
     public void setup() throws Exception {
-        CurrentUser.authenticate(System.getProperty("user.name"));
         FileUtils.deleteDirectory(new File(DATA_DIRECTORY));
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);

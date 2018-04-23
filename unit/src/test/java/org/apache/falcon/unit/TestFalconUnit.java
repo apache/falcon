@@ -39,7 +39,6 @@ import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -107,7 +106,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertTrue(files.length > 0);
     }
 
-//    @Test
+    @Test
     public void testRetention() throws IOException, FalconException,
             ParseException, InterruptedException {
         // submit with default props

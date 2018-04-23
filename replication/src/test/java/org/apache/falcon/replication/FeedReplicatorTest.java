@@ -22,12 +22,10 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.Storage;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -36,11 +34,6 @@ import org.testng.annotations.Test;
 public class FeedReplicatorTest {
 
     private String defaultPath = "jail://FeedReplicatorTest:00/tmp";
-
-    @BeforeClass
-    public void setup() {
-        CurrentUser.authenticate(System.getProperty("user.name"));
-    }
 
     @Test
     public void testArguments() throws Exception {

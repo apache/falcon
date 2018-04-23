@@ -110,17 +110,15 @@ public final class ConfigurationStore implements FalconService {
     public static ConfigurationStore get() {
         return STORE;
     }
-    private FileSystem fs;
     private Path storePath;
 
-    public FileSystem getFs() {
-        return fs;
+    public FileSystem getFs() throws FalconException {
+        return HadoopClientFactory.get().createFalconFileSystem(storePath.toUri());
     }
 
     public Path getStorePath() {
         return storePath;
     }
-
 
     private ConfigurationStore() {
         for (EntityType type : EntityType.values()) {
@@ -131,7 +129,7 @@ public final class ConfigurationStore implements FalconService {
         if (shouldPersist) {
             String uri = StartupProperties.get().getProperty("config.store.uri");
             storePath = new Path(uri);
-            fs = initializeFileSystem();
+            initializeFileSystem();
         }
     }
 
@@ -194,7 +192,8 @@ public final class ConfigurationStore implements FalconService {
     private void loadEntity(final EntityType type) throws FalconException {
         try {
             final ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
-            FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
+
+            FileStatus[] files = getFs().globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
             if (files != null) {
 
                 final ExecutorService service = Executors.newFixedThreadPool(numThreads);
@@ -425,7 +424,7 @@ public final class ConfigurationStore implements FalconService {
         if (!shouldPersist) {
             return;
         }
-        OutputStream out = fs
+        OutputStream out = getFs()
                 .create(new Path(storePath,
                         type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
         try {
@@ -446,13 +445,13 @@ public final class ConfigurationStore implements FalconService {
      * @param name - name
      * @throws IOException If any error in accessing the storage
      */
-    private void archive(EntityType type, String name) throws IOException {
+    private void archive(EntityType type, String name) throws IOException, FalconException {
         if (!shouldPersist) {
             return;
         }
         Path archivePath = new Path(storePath, "archive" + Path.SEPARATOR + type);
-        HadoopClientFactory.mkdirs(fs, archivePath, STORE_PERMISSION);
-        fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),
+        HadoopClientFactory.mkdirs(getFs(), archivePath, STORE_PERMISSION);
+        getFs().rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),
                 new Path(archivePath, URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
         LOG.info("Archived configuration {}/{}", type, name);
     }
@@ -469,7 +468,7 @@ public final class ConfigurationStore implements FalconService {
     private synchronized <T extends Entity> T restore(EntityType type, String name)
         throws IOException, FalconException {
 
-        InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
+        InputStream in = getFs().open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
         XMLInputFactory xif = SchemaHelper.createXmlInputFactory();
         try {
             XMLStreamReader xsr = xif.createXMLStreamReader(in);

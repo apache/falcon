@@ -20,7 +20,6 @@ package org.apache.falcon.workflow;
 
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.EngineType;
-import org.apache.falcon.security.CurrentUser;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -61,7 +60,6 @@ public class WorkflowExecutionContextTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
-        CurrentUser.authenticate(System.getProperty("user.name"));
         context = WorkflowExecutionContext.create(getTestMessageArgs(),
                 WorkflowExecutionContext.Type.POST_PROCESSING);
     }

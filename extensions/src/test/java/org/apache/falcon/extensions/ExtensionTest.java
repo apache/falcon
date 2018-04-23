@@ -38,7 +38,6 @@ import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtensionPropert
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirroringExtension;
 import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -251,7 +250,6 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         miniDfs.allowSnapshot(new Path(SOURCEDIR));
         miniDfs.allowSnapshot(new Path(TARGETDIR));
 
-        CurrentUser.authenticate(System.getProperty("user.name"));
         List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
                 getHdfsSnapshotExtensionConfigStream());
         if (entities == null || entities.isEmpty()) {
