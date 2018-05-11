@@ -49,6 +49,16 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Test;
+import java.io.IOException;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 /**
  * Entity graph tests.
  */
@@ -475,4 +485,16 @@ public class EntityGraphTest extends AbstractTestBase {
         Assert.assertEquals(1, entities.size());
         Assert.assertTrue(entities.contains(cluster));
     }
+
+    @BeforeSuite
+    @AfterSuite
+    public void cleanup() throws IOException {
+        Path path = new Path(StartupProperties.get().
+                getProperty("config.store.uri"));
+        FileSystem fs = FileSystem.get(path.toUri(), new Configuration());
+        fs.delete(path, true);
+        System.out.println("Cleaned up " + path);
+    }
+
+
 }
