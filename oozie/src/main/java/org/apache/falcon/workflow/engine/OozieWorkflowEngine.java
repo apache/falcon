@@ -153,6 +153,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         if (StartupProperties.isServerInSafeMode()) {
             throwSafemodeException("SCHEDULE");
         }
+        //Adding group information to pass to oozie
+        if (entity.getACL() != null && entity.getACL().getGroup() != null) {
+            suppliedProps.put(OozieClient.GROUP_NAME, entity.getACL().getGroup());
+        }
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -178,6 +182,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 }
 
                 //Do dryRun of coords before schedule as schedule is asynchronous
+                LOG.debug("The properties passed to oozie are: {}", properties.stringPropertyNames().toString());
                 dryRunInternal(cluster, new Path(properties.getProperty(OozieEntityBuilder.ENTITY_PATH)), skipDryRun);
                 scheduleEntity(clusterName, properties, entity);
             }
