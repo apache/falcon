@@ -155,6 +155,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
         //Adding group information to pass to oozie
         if (entity.getACL() != null && entity.getACL().getGroup() != null) {
+            if (suppliedProps == null) {
+                suppliedProps = new HashMap<>();
+            }
             suppliedProps.put(OozieClient.GROUP_NAME, entity.getACL().getGroup());
         }
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
