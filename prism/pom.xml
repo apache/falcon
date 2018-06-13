@@ -309,8 +309,8 @@
                             <goal>docs</goal>
                         </goals>
                         <configuration>
-                            <source>1.7</source>
-                            <target>1.7</target>
+                            <source>1.8</source>
+                            <target>1.8</target>
                             <configFile>enunciate.xml</configFile>
                             <!-- the directory where to put the docs -->
                             <docsDir>${project.build.directory}/restapi/docs</docsDir>

@@ -21,6 +21,7 @@ package org.apache.falcon.hadoop;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.security.AuthenticationInitializationService;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -41,6 +42,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * A factory implementation to dole out FileSystem handles based on the logged in user.
@@ -62,12 +65,29 @@ public final class HadoopClientFactory {
     public static final FsPermission READ_ONLY_PERMISSION =
             new FsPermission(FsAction.READ, FsAction.READ, FsAction.READ);
 
+    private ConcurrentMap<String, UserGroupInformation> cache = new ConcurrentHashMap<String, UserGroupInformation>();
+
     private HadoopClientFactory() {
     }
 
     public static HadoopClientFactory get() {
         return INSTANCE;
     }
+
+    public UserGroupInformation getProxyUser(String user) throws IOException {
+        // Due to the token refresh that happens in AuthenticationInitializationService, need to ensure the new
+        // credentials are picked up.
+        UserGroupInformation loginUser = AuthenticationInitializationService.getLoginUser();
+        if (loginUser == null) {
+            loginUser = UserGroupInformation.getLoginUser();
+        }
+        if (! cache.containsKey(user) || loginUser != cache.get(user).getRealUser()) {
+                cache.put(user, UserGroupInformation.createProxyUser(user, loginUser));
+                LOG.debug("Adding {} to proxy user cache with real user, {}", user, cache.get(user).getRealUser());
+        }
+        return cache.get(user);
+    }
+
 
     /**
      * This method is only used by Falcon internally to talk to the config store on HDFS.
@@ -147,12 +167,11 @@ public final class HadoopClientFactory {
 
         String nameNode = getNameNode(conf);
         try {
-            return createDistributedFileSystem(CurrentUser.getProxyUGI(), new URI(nameNode), conf);
-        } catch (URISyntaxException e) {
+            UserGroupInformation ugi = CurrentUser.isAuthenticated()
+                    ? getProxyUser(CurrentUser.getUser()) : UserGroupInformation.getCurrentUser();
+            return createDistributedFileSystem(ugi, new URI(nameNode), conf);
+        } catch (Exception e) {
             throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode, e);
-        } catch (IOException e) {
-            throw new FalconException("Exception while getting Distributed FileSystem for proxy: "
-                    + CurrentUser.getUser(), e);
         }
     }
 
@@ -174,12 +193,12 @@ public final class HadoopClientFactory {
     public FileSystem createProxiedFileSystem(final URI uri,
                                               final Configuration conf) throws FalconException {
         Validate.notNull(uri, "uri cannot be null");
-
         try {
-            return createFileSystem(CurrentUser.getProxyUGI(), uri, conf);
+            UserGroupInformation ugi = CurrentUser.isAuthenticated()
+                    ? getProxyUser(CurrentUser.getUser()) : UserGroupInformation.getCurrentUser();
+            return createFileSystem(ugi, uri, conf);
         } catch (IOException e) {
-            throw new FalconException("Exception while getting FileSystem for proxy: "
-                + CurrentUser.getUser(), e);
+            throw new FalconException("Exception while getting Proxied FileSystem for: " + uri, e);
         }
     }
 
@@ -207,7 +226,8 @@ public final class HadoopClientFactory {
                 return FileSystem.get(uri, conf);
             }
 
-            LOG.trace("Creating FS impersonating user {}", proxyUserName);
+            LOG.trace("Creating FS impersonating user {} using auth method {}, real user {}",
+                    ugi.getShortUserName(), ugi.getAuthenticationMethod(), ugi.getRealUser());
             return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                 public FileSystem run() throws Exception {
                     return FileSystem.get(uri, conf);
@@ -237,11 +257,12 @@ public final class HadoopClientFactory {
             // prevent falcon impersonating falcon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.info("Creating Distributed FS for the login user {}, impersonation not required",
+                LOG.trace("Creating Distributed FS for the login user {}, impersonation not required",
                         proxyUserName);
                 returnFs = DistributedFileSystem.get(uri, conf);
             } else {
-                LOG.info("Creating FS impersonating user {}", proxyUserName);
+                LOG.trace("Creating FS impersonating user {} using auth method {}, real user {}",
+                        ugi.getShortUserName(), ugi.getAuthenticationMethod(), ugi.getRealUser());
                 returnFs = ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                     public FileSystem run() throws Exception {
                         return DistributedFileSystem.get(uri, conf);
@@ -259,18 +280,6 @@ public final class HadoopClientFactory {
                                 final Configuration conf) throws FalconException {
         Validate.notNull(ugi, "ugi cannot be null");
         Validate.notNull(conf, "configuration cannot be null");
-
-        try {
-            if (UserGroupInformation.isSecurityEnabled()) {
-                LOG.debug("Revalidating Auth Token with auth method {}",
-                        UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
-                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
-            }
-        } catch (IOException ioe) {
-            throw new FalconException("Exception while getting FileSystem. Unable to check TGT for user "
-                    + ugi.getShortUserName(), ioe);
-        }
-
         validateNameNode(uri, conf);
     }
 
