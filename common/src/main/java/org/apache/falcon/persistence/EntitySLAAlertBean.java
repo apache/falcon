@@ -101,11 +101,11 @@ public class EntitySLAAlertBean {
     private Boolean slaHighAlertSent;
 
     public Date getNominalTime() {
-        return new Date(nominalTime.getTime());
+        return nominalTime;
     }
 
     public void setNominalTime(Date nominalTime) {
-        this.nominalTime = new Date(nominalTime.getTime());
+        this.nominalTime = nominalTime;
     }
 
     public String getId() {
