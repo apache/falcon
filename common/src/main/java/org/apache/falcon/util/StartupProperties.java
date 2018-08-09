@@ -63,15 +63,10 @@ public final class StartupProperties extends ApplicationProperties {
                 INSTANCE.compareAndSet(null, new StartupProperties());
                 storePath = new Path((INSTANCE.get().getProperty(CONFIGSTORE_PROPERTY)));
                 fileSystem = HadoopClientFactory.get().createFalconFileSystem(storePath.toUri());
-                String isSafeMode = (doesSafemodeFileExist()) ? "true" : "false";
-                LOG.info("Initializing Falcon StartupProperties with safemode set to {}.", isSafeMode);
-                INSTANCE.get().setProperty(SAFEMODE_PROPERTY, isSafeMode);
             }
             return INSTANCE.get();
         } catch (FalconException e) {
             throw new RuntimeException("Unable to read application startup properties", e);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to verify Falcon safemode", e);
         }
     }
 
