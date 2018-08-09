@@ -263,6 +263,9 @@ public class MonitoringJdbcStateStore {
 
     public void putSLAAlertInstance(String entityName, String cluster, String entityType, Date nominalTime,
                                     Boolean isSLALowMissed, Boolean isSLAHighMissed) throws FalconException{
+        if(isSLAAlertInstancePresent(entityName, cluster, entityType, nominalTime)){
+            return;
+        }
         EntityManager entityManager = getEntityManager();
         EntitySLAAlertBean entitySLAAlertBean = new EntitySLAAlertBean();
         entitySLAAlertBean.setEntityName(entityName);
@@ -311,6 +314,15 @@ public class MonitoringJdbcStateStore {
 
     private void beginTransaction(EntityManager entityManager) {
         entityManager.getTransaction().begin();
+    }
+
+    public boolean isSLAAlertInstancePresent(String entityName, String cluster, String entityType, Date nominalTime){
+        try{
+            getEntityAlertInstance(entityName, cluster, nominalTime, entityType);
+            return true;
+        } catch (Exception NoResultException){
+            return false;
+        }
     }
 
 }
