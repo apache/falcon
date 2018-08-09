@@ -452,7 +452,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         Entity entity = EntityUtil.getEntity(entityType, entityName);
         authenticateUser(entity);
         try {
-            if (entityType.equalsIgnoreCase(EntityType.PROCESS.toString())){
+            if (entity.getEntityType() == EntityType.PROCESS){
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
                 AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
@@ -470,7 +470,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 }
                 return false;
             }
-            if (entityType.equalsIgnoreCase(EntityType.FEED.toString())){
+            if (entity.getEntityType() == EntityType.FEED){
                 LOG.trace("Checking instance availability status for feed:{}, cluster:{}, instanceTime:{}",
                         entity.getName(), clusterName, nominalTime);
 
@@ -567,7 +567,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         }
         Entity entity = EntityUtil.getEntity(entityType, entityName);
 
-        if (entityType.equals(EntityType.FEED.toString())) {
+        if (entity.getEntityType() == EntityType.FEED) {
             Sla sla = FeedHelper.getSLA(clusterName, (Feed) entity);
 
             if (sla != null) {
@@ -640,7 +640,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
 
     @VisibleForTesting
     Date getInitialStartTime(Entity entity, String clusterName, String entityType) throws FalconException {
-        if (entityType.equals(EntityType.FEED.toString())){
+        if (entity.getEntityType() == EntityType.FEED){
             Sla sla = FeedHelper.getSLA(clusterName, (Feed) entity);
             if (sla == null) {
                 throw new IllegalStateException("InitialStartTime can not be determined as the feed: "
