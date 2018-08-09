@@ -99,9 +99,11 @@ public final class FalconServer {
             boolean isSafeMode = Boolean.parseBoolean(cmd.getOptionValue(SAFE_MODE));
             if (isSafeMode) {
                 StartupProperties.createSafemodeFile();
+                LOG.info("Falcon is starting in safemode.");
             } else {
                 StartupProperties.deleteSafemodeFile();
             }
+            StartupProperties.get().setProperty(StartupProperties.SAFEMODE_PROPERTY, Boolean.toString(isSafeMode));
         }
 
         final String enableTLSFlag = StartupProperties.get().getProperty("falcon.enableTLS");
