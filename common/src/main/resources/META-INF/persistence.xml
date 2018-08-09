@@ -125,5 +125,39 @@
             <property name="openjpa.Log" value="log4j"/>
         </properties>
     </persistence-unit>
+    <persistence-unit name="falcon-sqlserver" transaction-type="RESOURCE_LOCAL">
+        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
+
+        <class>org.apache.falcon.persistence.EntityBean</class>
+        <class>org.apache.falcon.persistence.InstanceBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.PendingInstanceBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
+        <class>org.apache.falcon.persistence.BacklogMetricBean</class>
+        <class>org.apache.falcon.persistence.ExtensionBean</class>
+        <class>org.apache.falcon.persistence.ExtensionJobsBean</class>
+        <class>org.apache.falcon.persistence.ProcessInstanceInfoBean</class>
+        <properties>
+            <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
+
+            <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
+
+            <property name="openjpa.MetaDataFactory"
+                      value="jpa(Types=org.apache.falcon.persistence.EntityBean;
+                org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean;
+                org.apache.falcon.persistence.ExtensionBean;org.apache.falcon.persistence.ExtensionJobsBean;
+                org.apache.falcon.persistence.ProcessInstanceInfoBean)"/>
+            <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
+            <property name="openjpa.LockManager" value="pessimistic"/>
+            <property name="openjpa.ReadLockLevel" value="read"/>
+            <property name="openjpa.WriteLockLevel" value="write"/>
+            <property name="openjpa.jdbc.TransactionIsolation" value="repeatable-read"/> <!--CUSTOM-->
+            <property name="openjpa.jdbc.DBDictionary" value="batchLimit=50"/>
+            <property name="openjpa.jdbc.DBDictionary" value="TimestampTypeName=TIMESTAMP"/>
+            <property name="openjpa.RuntimeUnenhancedClasses" value="unsupported"/>
+            <property name="openjpa.Log" value="log4j"/>
+        </properties>
+    </persistence-unit>
 
 </persistence>
