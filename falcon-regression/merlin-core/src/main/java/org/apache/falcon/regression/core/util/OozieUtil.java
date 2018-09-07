@@ -713,7 +713,7 @@ public final class OozieUtil {
         throws OozieClientException {
         List<WorkflowAction> wfAction = oozieClient.getJobInfo(workflowId).getActions();
         for (WorkflowAction wf : wfAction) {
-            if (wf.getName().contains(actionName)) {
+            if ((wf.getName().contains(actionName)) && (wf.getExternalStatus() != null)) {
                 return wf.getExternalStatus();
             }
         }
