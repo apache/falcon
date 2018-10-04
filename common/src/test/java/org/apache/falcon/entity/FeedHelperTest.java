@@ -28,8 +28,8 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Properties;
 import org.apache.falcon.entity.v0.cluster.Property;
-import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.Arguments;
+import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.Extract;
@@ -38,12 +38,13 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
 import org.apache.falcon.entity.v0.feed.FieldsType;
 import org.apache.falcon.entity.v0.feed.Import;
-import org.apache.falcon.entity.v0.feed.Lifecycle;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.Lifecycle;
 import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
+import org.apache.falcon.entity.v0.feed.ArchivalStage;
 import org.apache.falcon.entity.v0.feed.Datasource;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
@@ -266,8 +267,14 @@ public class FeedHelperTest extends AbstractTestBase {
                 .getParser(EntityType.FEED);
         Feed feed = parser.parse(this.getClass().getResourceAsStream(FEED3_XML));
         List<String> policies = FeedHelper.getPolicies(feed, "testCluster");
-        Assert.assertEquals(policies.size(), 1);
+        Assert.assertEquals(policies.size(), 2);
         Assert.assertEquals(policies.get(0), "AgeBasedDelete");
+        Assert.assertEquals(policies.get(1), "AgeBasedArchival");
+
+        feed.getLifecycle().setRetentionStage(null);
+        policies = FeedHelper.getPolicies(feed, "backupCluster");
+        Assert.assertEquals(policies.size(), 1);
+        Assert.assertEquals(policies.get(0), "AgeBasedArchival");
     }
 
     @Test
@@ -901,6 +908,180 @@ public class FeedHelperTest extends AbstractTestBase {
         clusterRetentionStage.setFrequency(new Frequency("hours(4)"));
         Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
                             new Frequency("hours(4)"));
+    }
+
+    @Test
+    public void testGetArchivalStage() throws Exception {
+        Feed feed = new Feed();
+        feed.setFrequency(new Frequency("hours(1)"));
+
+        // archival stage location is not defined
+        Lifecycle globalLifecycle = new Lifecycle();
+        ArchivalStage globalArchivalStage = new ArchivalStage();
+        globalLifecycle.setArchivalStage(globalArchivalStage);
+        feed.setLifecycle(globalLifecycle);
+
+        Clusters clusters = new Clusters();
+        org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
+        cluster.setName("cluster1");
+        clusters.getClusters().add(cluster);
+        feed.setClusters(clusters);
+
+        // lifecycle is defined only at global level
+        Location globalLocation = new Location();
+        globalLocation.setType(LocationType.DATA);
+        globalLocation.setPath("s4://globalPath/archival/");
+        globalArchivalStage.setLocation(globalLocation);
+        globalLifecycle.setArchivalStage(globalArchivalStage);
+        feed.setLifecycle(globalLifecycle);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                feed.getLifecycle().getArchivalStage().getLocation().getPath());
+
+        // lifecycle is defined at both global and cluster level
+        Lifecycle clusterLifecycle = new Lifecycle();
+        ArchivalStage clusterArchivalStage = new ArchivalStage();
+        Location clusterLocation = new Location();
+        clusterLocation.setType(LocationType.DATA);
+        clusterLocation.setPath("s4://clusterPath/archival/");
+        clusterArchivalStage.setLocation(clusterLocation);
+        clusterLifecycle.setArchivalStage(clusterArchivalStage);
+        feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+
+        // lifecycle at both level - archival only at cluster level.
+        feed.getLifecycle().setArchivalStage(null);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+
+        // lifecycle at both level - archival only at global level.
+        feed.getLifecycle().setArchivalStage(globalArchivalStage);
+        feed.getClusters().getClusters().get(0).getLifecycle().setArchivalStage(null);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                feed.getLifecycle().getArchivalStage().getLocation().getPath());
+
+        // lifecycle is defined only at cluster level
+        feed.setLifecycle(null);
+        feed.getClusters().getClusters().get(0).getLifecycle().setArchivalStage(clusterArchivalStage);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+    }
+
+    @Test
+    public void testLifecycleStage() throws Exception {
+        Feed feed = new Feed();
+        feed.setFrequency(new Frequency("days(1)"));
+
+        Clusters clusters = new Clusters();
+        org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
+        cluster.setName("cluster1");
+        clusters.getClusters().add(cluster);
+        feed.setClusters(clusters);
+
+        // retention stage frequency is not defined
+        // archival stage location is not defined
+        Lifecycle globalLifecycle = new Lifecycle();
+
+        ArchivalStage globalArchivalStage = new ArchivalStage();
+        globalLifecycle.setArchivalStage(globalArchivalStage);
+        RetentionStage globalRetentionStage = new RetentionStage();
+        globalLifecycle.setRetentionStage(globalRetentionStage);
+        feed.setLifecycle(globalLifecycle);
+
+        // lifecycle is defined only at global level
+        Location globalLocation = new Location();
+        globalLocation.setType(LocationType.DATA);
+        globalLocation.setPath("s4://globalPath/archival/");
+        globalArchivalStage.setLocation(globalLocation);
+        globalLifecycle.setArchivalStage(globalArchivalStage);
+        globalRetentionStage.setFrequency(new Frequency("hours(2)"));
+        globalLifecycle.setRetentionStage(globalRetentionStage);
+        feed.setLifecycle(globalLifecycle);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                feed.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                feed.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle is defined at both global and cluster level
+        Lifecycle clusterLifecycle = new Lifecycle();
+        ArchivalStage clusterArchivalStage = new ArchivalStage();
+        Location clusterLocation = new Location();
+        clusterLocation.setType(LocationType.DATA);
+        clusterLocation.setPath("s4://clusterPath/archival/");
+        clusterArchivalStage.setLocation(clusterLocation);
+        clusterLifecycle.setArchivalStage(clusterArchivalStage);
+        RetentionStage clusterRetentionStage = new RetentionStage();
+        clusterRetentionStage.setFrequency(new Frequency("hours(4)"));
+        clusterLifecycle.setRetentionStage(clusterRetentionStage);
+        feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle at both level - retention/archival only at cluster level.
+        feed.getLifecycle().setArchivalStage(null);
+        feed.getLifecycle().setRetentionStage(null);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle at both level - retention/archival only at global level.
+        feed.getLifecycle().setArchivalStage(globalArchivalStage);
+        feed.getLifecycle().setRetentionStage(globalRetentionStage);
+        feed.getClusters().getClusters().get(0).getLifecycle().setArchivalStage(null);
+        feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(null);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                feed.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                feed.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle at both level- retention at cluster level, archival at global level
+        feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(clusterRetentionStage);
+        feed.getLifecycle().setRetentionStage(null);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                feed.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle at both level- retention at global level, archival at cluster level
+        feed.getClusters().getClusters().get(0).getLifecycle().setArchivalStage(clusterArchivalStage);
+        feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(null);
+        feed.getLifecycle().setRetentionStage(globalRetentionStage);
+        feed.getLifecycle().setArchivalStage(null);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                feed.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle is defined only at cluster level
+        feed.setLifecycle(null);
+        feed.getClusters().getClusters().get(0).getLifecycle().setArchivalStage(clusterArchivalStage);
+        feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(clusterRetentionStage);
+        Assert.assertNotNull(FeedHelper.getArchivalStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getArchivalPath(feed, cluster.getName()),
+                cluster.getLifecycle().getArchivalStage().getLocation().getPath());
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
     }
 
     @Test

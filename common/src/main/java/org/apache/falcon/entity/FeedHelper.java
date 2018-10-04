@@ -27,22 +27,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
-import org.apache.falcon.entity.v0.feed.CatalogTable;
-import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
-import org.apache.falcon.entity.v0.feed.Lifecycle;
-import org.apache.falcon.entity.v0.feed.Load;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.entity.v0.feed.MergeType;
-import org.apache.falcon.entity.v0.feed.Property;
-import org.apache.falcon.entity.v0.feed.RetentionStage;
-import org.apache.falcon.entity.v0.feed.Sla;
-import org.apache.falcon.entity.v0.feed.Validity;
+import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -401,8 +386,22 @@ public final class FeedHelper {
 
             if (clusterLifecycle != null && clusterLifecycle.getRetentionStage() != null) {
                 return clusterLifecycle.getRetentionStage();
-            } else if (globalLifecycle != null) {
+            } else if (globalLifecycle != null && globalLifecycle.getRetentionStage() != null) {
                 return globalLifecycle.getRetentionStage();
+            }
+        }
+        return null;
+    }
+
+    public static ArchivalStage getArchivalStage(Feed feed, String clusterName) throws FalconException {
+        if (isLifecycleEnabled(feed, clusterName)) {
+            Lifecycle globalLifecycle = feed.getLifecycle();
+            Lifecycle clusterLifecycle = getCluster(feed, clusterName).getLifecycle();
+
+            if (clusterLifecycle != null && clusterLifecycle.getArchivalStage() != null) {
+                return clusterLifecycle.getArchivalStage();
+            } else if (globalLifecycle != null && globalLifecycle.getArchivalStage() != null) {
+                return globalLifecycle.getArchivalStage();
             }
         }
         return null;
@@ -437,10 +436,20 @@ public final class FeedHelper {
         Cluster cluster = getCluster(feed, clusterName);
         if (cluster != null) {
             if (isLifecycleEnabled(feed, clusterName)) {
-                String policy = getRetentionStage(feed, clusterName).getPolicy();
-                policy = StringUtils.isBlank(policy)
-                        ? FeedLifecycleStage.RETENTION.getDefaultPolicyName() : policy;
-                result.add(policy);
+                String policy = "";
+                if (getRetentionStage(feed, clusterName) != null) {
+                    policy = getRetentionStage(feed, clusterName).getPolicy();
+                    policy = StringUtils.isBlank(policy)
+                            ? FeedLifecycleStage.RETENTION.getDefaultPolicyName() : policy;
+                    result.add(policy);
+                }
+
+                if (getArchivalStage(feed, clusterName) != null) {
+                    policy = getArchivalStage(feed, clusterName).getPolicy();
+                    policy = StringUtils.isBlank(policy)
+                            ? FeedLifecycleStage.ARCHIVAL.getDefaultPolicyName() : policy;
+                    result.add(policy);
+                }
             }
             return result;
         }
@@ -1295,4 +1304,17 @@ public final class FeedHelper {
         return storage.getListing(feed, clusterName, locationType, start, end);
     }
 
+    public static String getArchivalPath(Feed feed, String clusterName) throws FalconException {
+        String archivalPath = "";
+        ArchivalStage archivalStage = getArchivalStage(feed, clusterName);
+        if (archivalStage != null) {
+            Location location = archivalStage.getLocation();
+            if ((location != null) && (location.getPath() != null)) {
+                archivalPath = location.getPath();
+            } else {
+                throw new FalconException("Location cannot be empty.");
+            }
+        }
+        return archivalPath;
+    }
 }

@@ -28,7 +28,8 @@ public enum Tag {
     RETENTION(EntityType.FEED),
     REPLICATION(EntityType.FEED),
     IMPORT(EntityType.FEED),
-    EXPORT(EntityType.FEED);
+    EXPORT(EntityType.FEED),
+    ARCHIVAL(EntityType.FEED);
 
     private final EntityType entityType;
 

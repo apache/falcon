@@ -79,6 +79,7 @@ public final class OozieBuilderUtils {
     private static final Logger LOG = LoggerFactory.getLogger(OozieBuilderUtils.class);
 
     private static final String POSTPROCESS_TEMPLATE = "/action/post-process.xml";
+    private static final String PREPROCESS_TEMPLATE = "/action/pre-process.xml";
 
     public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
     public static final String MR_QUEUE_NAME = "queueName";
@@ -97,6 +98,7 @@ public final class OozieBuilderUtils {
     public static final String FAIL_POSTPROCESS_ACTION_NAME = "failed-post-processing";
     public static final String OK_ACTION_NAME = "end";
     public static final String FAIL_ACTION_NAME = "fail";
+    public static final String PREPROCESS_ACTION_NAME = "pre-processing";
 
 
     public static final String ENTITY_PATH = "ENTITY_PATH";
@@ -556,5 +558,27 @@ public final class OozieBuilderUtils {
             conf.getProperty().add(confProp);
         }
         return conf;
+    }
+
+    public static ACTION getPreProcessingAction(Tag tag) throws FalconException {
+        ACTION action = unmarshalAction(PREPROCESS_TEMPLATE);
+        decorateWithOozieRetries(action);
+
+        List<String> args = action.getJava().getArg();
+        args.add("-out");
+        if (tag == Tag.ARCHIVAL) {
+            args.add("${logDir}/latedata/${nominalTime}/${srcClusterName}");
+        } else {
+            args.add("${logDir}/latedata/${nominalTime}");
+        }
+        return action;
+    }
+
+    public static String getFailAction(){
+        if (!Boolean.parseBoolean(OozieBuilderUtils.ENABLE_POSTPROCESSING)){
+            return FAIL_ACTION_NAME;
+        } else {
+            return FAIL_POSTPROCESS_ACTION_NAME;
+        }
     }
 }

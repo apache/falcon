@@ -439,13 +439,16 @@ replication. "preserveReplicationNumber" represents preserving replication numbe
             <property name="retention.policy.agebaseddelete.limit" value="hours(9)"></property>
         </properties>
     </retention-stage>
+    <archival-stage>
+        <deleteFromSource>false</deleteFromSource>
+        <queue>default</queue>
+        <location type="data" path="s4://prod/falcon/${YEAR}-${MONTH}-${DAY}-${HOUR}/"/>
+    </archival-stage>
 </lifecycle>
 
 </verbatim>
 
-lifecycle tag is the new way to define various stages of a feed's lifecycle. In the example above we have defined a
-retention-stage using lifecycle tag. You may define lifecycle at global level or a cluster level or both. Cluster level
-configuration takes precedence and falcon falls back to global definition if cluster level specification is missing.
+lifecycle tag is the new way to define various stages of a feed's lifecycle. In the example above we have defined retention-stage and  archival-stage using lifecycle tag. Atleast one of the satges should be defined if lifecycle tag is used. You may define lifecycle at global level or a cluster level or both. Cluster level configuration takes precedence and falcon falls back to global definition if cluster level specification is missing.
 
 
 ----++++ Retention Stage
@@ -468,6 +471,13 @@ wastage of compute resources.
 
 In future, we will allow more customisation like customising how to choose instances to be deleted through this method.
 
+----++++ Archival Stage
+Lifecycle archival stage allows users to archive data instead of creating dummy replication feed for archival. This is
+done through <archival-stage> tag in <lifecycle> tag.
+
+In this new method of defining archival you can specify the path at which data is to be archived and the queue for
+archival jobs. The behavior of archival-stage is to archive all the data corresponding to the given instance-time.
+Tag "location" is a mandatory property and must contain a valid path e.g. "s4://prod/falcon/${YEAR}-${MONTH}-${DAY}"
 
 
 ---++ Process Specification

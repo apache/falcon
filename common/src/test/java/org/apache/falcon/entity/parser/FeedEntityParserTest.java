@@ -187,14 +187,20 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals("AgeBasedDelete", FeedHelper.getPolicies(feed, "testCluster").get(0));
         assertEquals("reports", feed.getLifecycle().getRetentionStage().getQueue());
         assertEquals("NORMAL", feed.getLifecycle().getRetentionStage().getPriority());
+        assertEquals("default", feed.getLifecycle().getArchivalStage().getQueue());
+        assertEquals("s4://prod/falcon/${YEAR}-${MONTH}-${DAY}-${HOUR}/", feed.getLifecycle().getArchivalStage().getLocation().getPath());
+        assertEquals("AgeBasedArchival", FeedHelper.getPolicies(feed, "testCluster").get(1));
+        assertEquals("s4://prodnew/falcon/${YEAR}-${MONTH}-${DAY}-${HOUR}/", feed.getClusters().getClusters().get(0).getLifecycle().getArchivalStage().getLocation().getPath());
     }
 
     @Test(expectedExceptions = ValidationException.class,
-            expectedExceptionsMessageRegExp = ".*Retention is a mandatory stage.*")
-    public void testMandatoryRetention() throws Exception {
+            expectedExceptionsMessageRegExp = ".*Atleast one of Retention/Archival is a mandatory stage, didn't find it for cluster.*")
+    public void testLifecycleStage() throws Exception {
         Feed feed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED3_XML));
         feed.getLifecycle().setRetentionStage(null);
+        feed.getLifecycle().setArchivalStage(null);
+        assertEquals("AgeBasedDelete", FeedHelper.getPolicies(feed, "testCluster").get(0));
         parser.validate(feed);
     }
 
@@ -250,6 +256,15 @@ public class FeedEntityParserTest extends AbstractTestBase {
         feed.setFrequency(Frequency.fromString("minutes(30)"));
         Frequency frequency = Frequency.fromString("minutes(59)");
         feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed);
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+            expectedExceptionsMessageRegExp = ".*Location path cannot be empty.*")
+    public void testArchivalPath() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+        feed.getLifecycle().getArchivalStage().getLocation().setPath("");
         parser.validate(feed);
     }
 
