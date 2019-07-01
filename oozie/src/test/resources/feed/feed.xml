@@ -53,5 +53,9 @@
         <property name="order"  value="FIFO" />
         <property name="parallel"  value="2" />
         <property name="field4" value="value2"/>
+        <property name="amMemory" value="1024"></property>
+        <property name="amCommandOpts" value="-Xmx800m -XX:MaxMetaspaceSize=128m"></property>
+        <property name="mapMemory" value="1024"></property>
+        <property name="mapJavaOpts" value="-Xmx800m -XX:MaxMetaspaceSize=128m"></property>
     </properties>
 </feed>

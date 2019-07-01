@@ -55,5 +55,9 @@
         <property name="maxMaps" value="33" />
         <property name="mapBandwidth" value="2" />
         <property name="job.counter" value="true" />
+        <property name="amMemory" value="1024"></property>
+        <property name="amCommandOpts" value="-Xmx800m -XX:MaxMetaspaceSize=128m"></property>
+        <property name="mapMemory" value="1024"></property>
+        <property name="mapJavaOpts" value="-Xmx800m -XX:MaxMetaspaceSize=128m"></property>
     </properties>
 </feed>

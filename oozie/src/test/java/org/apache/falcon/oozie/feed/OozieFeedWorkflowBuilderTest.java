@@ -202,6 +202,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
+
+        Assert.assertEquals(wfProps.get("amMemory"), "1024");
+        Assert.assertEquals(wfProps.get("amCommandOpts"), "-Xmx800m -XX:MaxMetaspaceSize=128m");
+        Assert.assertEquals(wfProps.get("mapMemory"), "1024");
+        Assert.assertEquals(wfProps.get("mapJavaOpts"), "-Xmx800m -XX:MaxMetaspaceSize=128m");
     }
 
     @Test
@@ -395,6 +400,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("maxMaps"), "5");
         Assert.assertEquals(wfProps.get("mapBandwidth"), "100");
 
+        Assert.assertEquals(wfProps.get("amMemory"), "1024");
+        Assert.assertEquals(wfProps.get("amCommandOpts"), "-Xmx800m -XX:MaxMetaspaceSize=128m");
+        Assert.assertEquals(wfProps.get("mapMemory"), "1024");
+        Assert.assertEquals(wfProps.get("mapJavaOpts"), "-Xmx800m -XX:MaxMetaspaceSize=128m");
+
         assertLibExtensions(coord, "replication");
         WORKFLOWAPP wf = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
         assertWorkflowRetries(wf);
@@ -503,9 +513,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         JAVA replication = replicationActionNode.getJava();
         List<String> args = replication.getArg();
         if (args.contains("-counterLogDir")) {
-            Assert.assertEquals(args.size(), 17);
+            Assert.assertEquals(args.size(), 21);
         } else {
-            Assert.assertEquals(args.size(), 15);
+            Assert.assertEquals(args.size(), 19);
         }
 
         HashMap<String, String> props = getCoordProperties(coord);

@@ -41,11 +41,31 @@
                 <name>oozie.launcher.oozie.libpath</name>
                 <value>${wf:conf("falcon.libpath")}</value>
             </property>
+            <property>
+                <name>oozie.launcher.yarn.app.mapreduce.am.resource.mb</name>
+                <value>${amMemory}</value>
+            </property>
+            <property>
+                <name>oozie.launcher.yarn.app.mapreduce.am.command-opts</name>
+                <value>${amCommandOpts}</value>
+            </property>
+            <property>
+                <name>oozie.launcher.mapreduce.map.memory.mb</name>
+                <value>${mapMemory}</value>
+            </property>
+            <property>
+                <name>oozie.launcher.mapreduce.map.java.opts</name>
+                <value>${mapJavaOpts}</value>
+            </property>
         </configuration>
         <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
         <arg>-Dfalcon.include.path=${sourceRelativePaths}</arg>
         <arg>-Dmapred.job.queue.name=${queueName}</arg>
         <arg>-Dmapred.job.priority=${jobPriority}</arg>
+        <arg>-Dmapreduce.map.memory.mb={amMemory}</arg>
+        <arg>-Dmapreduce.map.memory.mb={amCommandOpts}</arg>
+        <arg>-Dmapreduce.map.memory.mb={mapMemory}</arg>
+        <arg>-Dmapreduce.map.memory.mb={mapJavaOpts}</arg>
         <arg>-maxMaps</arg>
         <arg>${maxMaps}</arg>
         <arg>-mapBandwidth</arg>
