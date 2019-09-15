@@ -23,6 +23,7 @@ import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.execution.NotificationHandler;
+import org.apache.falcon.execution.SchedulerUtil;
 import org.apache.falcon.notification.service.event.DataEvent;
 import org.apache.falcon.notification.service.impl.DataAvailabilityService;
 import org.apache.falcon.notification.service.request.DataNotificationRequest;
@@ -128,7 +129,8 @@ public class DataAvailabilityServiceTest extends AbstractTestBase {
         DataAvailabilityService.DataRequestBuilder dataRequestBuilder =
                 new DataAvailabilityService.DataRequestBuilder(handler, id);
         dataRequestBuilder.setPollingFrequencyInMillis(20).setCluster("testCluster")
-                .setTimeoutInMillis(100).setLocations(locations);
+                .setTimeoutInMillis(100).setLocations(locations).setExpType(SchedulerUtil.EXPTYPE.ABSOLUTE)
+                .setInputName("input");
         return dataRequestBuilder.build();
     }
 

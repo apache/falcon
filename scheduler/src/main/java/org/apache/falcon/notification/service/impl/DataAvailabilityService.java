@@ -17,29 +17,23 @@
  */
 package org.apache.falcon.notification.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.exception.NotificationServiceException;
 import org.apache.falcon.execution.NotificationHandler;
-import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.execution.SchedulerUtil;
 import org.apache.falcon.notification.service.FalconNotificationService;
 import org.apache.falcon.notification.service.event.DataEvent;
+import org.apache.falcon.notification.service.request.LocationBasedDataNotificationRequest;
+import org.apache.falcon.notification.service.request.RegexBasedDataNotificationRequest;
 import org.apache.falcon.notification.service.request.DataNotificationRequest;
 import org.apache.falcon.notification.service.request.NotificationRequest;
 import org.apache.falcon.state.ID;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +101,7 @@ public class DataAvailabilityService implements FalconNotificationService {
         executorService.shutdown();
     }
 
+
     /**
      * Builds {@link DataNotificationRequest}.
      */
@@ -115,9 +110,56 @@ public class DataAvailabilityService implements FalconNotificationService {
         private long pollingFrequencyInMillis;
         private long timeoutInMillis;
         private Map<Path, Boolean> locations;
+        private long startTimeInMillis;
+        private long endTimeInMillis;
+        private int startInstance;
+        private int endInstance;
+        private SchedulerUtil.EXPTYPE expType;
+        private String basePath;
+        private long frequencyInMillis;
+        private String inputName;
+        private boolean isOptional;
+
 
         public DataRequestBuilder(NotificationHandler handler, ID callbackID) {
             super(handler, callbackID);
+        }
+
+        @Override
+        public DataNotificationRequest build() {
+            checkMandatoryArgs();
+            if (expType == SchedulerUtil.EXPTYPE.ABSOLUTE) {
+                checkLocations();
+                return new LocationBasedDataNotificationRequest(handler, callbackId, cluster,
+                        pollingFrequencyInMillis, timeoutInMillis, locations, inputName, isOptional);
+            } else {
+                checkArgsForRegexRequest();
+                return new RegexBasedDataNotificationRequest(handler, callbackId, cluster,
+                        pollingFrequencyInMillis, timeoutInMillis, startTimeInMillis,
+                        endTimeInMillis, startInstance, endInstance, expType, basePath,
+                        frequencyInMillis, inputName, isOptional);
+            }
+        }
+
+        private void checkArgsForRegexRequest() {
+            if (startTimeInMillis <= 0 || endTimeInMillis <=0 || basePath == null || frequencyInMillis <=0) {
+                throw new IllegalArgumentException("Missing or incorrect, one or more of the mandatory arguments"
+                        + " for Regex Request: startTime, endTime, basepath, frequency");
+            }
+        }
+
+        private void checkLocations() {
+            if (locations == null) {
+                throw new IllegalArgumentException("Locations cannot be null for Absolute Expression Request");
+            }
+        }
+
+        private void checkMandatoryArgs() {
+            if (callbackId == null || cluster == null || pollingFrequencyInMillis <= 0
+                    || timeoutInMillis < pollingFrequencyInMillis || inputName == null || expType == null) {
+                throw new IllegalArgumentException("Missing or incorrect, one or more of the mandatory arguments:"
+                        + " callbackId, cluster, pollingFrequency, timeOut, inputName, expType");
+            }
         }
 
         public DataRequestBuilder setLocations(List<Path> locPaths) {
@@ -127,18 +169,6 @@ public class DataAvailabilityService implements FalconNotificationService {
             }
             this.locations = paths;
             return this;
-        }
-
-        @Override
-        public DataNotificationRequest build() {
-            if (callbackId == null || locations == null
-                    || cluster == null || pollingFrequencyInMillis <= 0
-                    || timeoutInMillis < pollingFrequencyInMillis) {
-                throw new IllegalArgumentException("Missing or incorrect, one or more of the mandatory arguments:"
-                        + " callbackId, locations, dataType, cluster, pollingFrequency, waitTime");
-            }
-            return new DataNotificationRequest(handler, callbackId, cluster,
-                    pollingFrequencyInMillis, timeoutInMillis, locations);
         }
 
         public DataRequestBuilder setCluster(String clusterName) {
@@ -161,7 +191,80 @@ public class DataAvailabilityService implements FalconNotificationService {
             this.timeoutInMillis = timeout;
             return this;
         }
+
+        public DataRequestBuilder setStartTimeInMillis(long startTime) {
+            if (startTime < 0) {
+                throw new IllegalArgumentException("StartTime should be greater than zero");
+            }
+            this.startTimeInMillis = startTime;
+            return this;
+        }
+
+        public DataRequestBuilder setEndTimeInMillis(long endTime) {
+            if (endTime < 0) {
+                throw new IllegalArgumentException("EndTime should be greater than startTime");
+            }
+            this.endTimeInMillis = endTime;
+            return this;
+        }
+
+        public DataRequestBuilder setStartInstance(int startInst) {
+            if (startInst < 0) {
+                throw new IllegalArgumentException("startInstance should be greater than zero");
+            }
+            this.startInstance = startInst;
+            return this;
+        }
+
+        public DataRequestBuilder setEndInstance(int endInst) {
+            if (endInst < 0) {
+                throw new IllegalArgumentException("endInstance should be greater than zero");
+            }
+            this.endInstance = endInst;
+            return this;
+        }
+
+        public DataRequestBuilder setBasePath(String basePathExp) {
+            if (StringUtils.isBlank(basePathExp)) {
+                throw new IllegalArgumentException("base path cannot be null or empty");
+            }
+            this.basePath = basePathExp;
+            return this;
+        }
+
+        public DataRequestBuilder setFrequencyInMillis(long freqInMillis) {
+            if (freqInMillis <= 0) {
+                throw new IllegalArgumentException("Frequency cannot be less than zero");
+            }
+            this.frequencyInMillis = freqInMillis;
+            return this;
+        }
+
+        public DataRequestBuilder setInputName(String inName) {
+            if (StringUtils.isBlank(inName)) {
+                throw new IllegalArgumentException("Feed name cannot be null or empty");
+            }
+            this.inputName = inName;
+            return this;
+        }
+
+        public DataRequestBuilder setExpType(SchedulerUtil.EXPTYPE exp) {
+            if (exp == null) {
+                throw new IllegalArgumentException("exptype cannot be null");
+            }
+            this.expType = exp;
+            return this;
+        }
+
+        public DataRequestBuilder setIsOptional(boolean optional) {
+            this.isOptional = optional;
+            return this;
+        }
+
     }
+
+
+
 
 
     private class EventConsumer implements Runnable {
@@ -179,10 +282,17 @@ public class DataAvailabilityService implements FalconNotificationService {
                     if (isUnRegistered) {
                         continue;
                     }
-                    boolean isDataArrived = checkConditions(dataNotificationRequest);
+                    DataServiceHandler dataServiceHandler = getDataServiceHandler(dataNotificationRequest);
+                    boolean isDataArrived = dataServiceHandler.handleRequest(dataNotificationRequest);
+
                     if (isDataArrived) {
                         notifyHandler(dataNotificationRequest, DataEvent.STATUS.AVAILABLE);
                     } else {
+                        if (dataNotificationRequest.isOptional()) {
+                            getAvailablePaths(dataNotificationRequest);
+                            notifyHandler(dataNotificationRequest, DataEvent.STATUS.AVAILABLE);
+                            continue;
+                        }
                         if (dataNotificationRequest.isTimedout()) {
                             notifyHandler(dataNotificationRequest, DataEvent.STATUS.UNAVAILABLE);
                             continue;
@@ -196,16 +306,42 @@ public class DataAvailabilityService implements FalconNotificationService {
             }
         }
 
+        private void getAvailablePaths(DataNotificationRequest dataNotificationRequest) {
+            Map<Path, Boolean> locPaths = dataNotificationRequest.getLocationMap();
+            Map<Path, Boolean> availableLocPaths = new HashMap<>();
+            for (Map.Entry<Path, Boolean> entry : locPaths.entrySet()) {
+                if (entry.getValue()) {
+                    availableLocPaths.put(entry.getKey(), entry.getValue());
+                }
+            }
+            if (availableLocPaths.isEmpty()) {
+                // add Empty Directory from clusterHelper
+                System.out.println("have to modify");
+            }
+            dataNotificationRequest.setLocationMap(availableLocPaths);
+        }
+
+        private DataServiceHandler getDataServiceHandler(DataNotificationRequest dataNotificationRequest) {
+            if (dataNotificationRequest instanceof LocationBasedDataNotificationRequest) {
+                return new PathServiceHandler();
+            } else if (dataNotificationRequest instanceof RegexBasedDataNotificationRequest) {
+                return new RegexServiceHandler();
+            } else {
+                throw new IllegalArgumentException(" Service Handler not defined for request "
+                        + dataNotificationRequest); // add toString to this
+            }
+        }
+
         private void notifyHandler(DataNotificationRequest dataNotificationRequest,
                                    DataEvent.STATUS status) {
             DataEvent dataEvent = new DataEvent(dataNotificationRequest.getCallbackId(),
-                    dataNotificationRequest.getLocations(), status);
+                    dataNotificationRequest.getLocations(), status, dataNotificationRequest.getInputName());
             boolean isUnRegistered = isUnRegistered(dataNotificationRequest);
             if (isUnRegistered) {
                 return;
             }
             try {
-                LOG.debug("Notifying Handler for Data Notification Request of id {} " ,
+                LOG.debug("Notifying Handler for Data Notification Request of id {} ",
                         dataNotificationRequest.getCallbackId().toString());
                 dataNotificationRequest.getHandler().onEvent(dataEvent);
             } catch (FalconException e) {
@@ -223,56 +359,6 @@ public class DataAvailabilityService implements FalconNotificationService {
                 return true;
             }
             return false;
-        }
-
-        private boolean checkConditions(DataNotificationRequest dataNotificationRequest) {
-            try {
-                Entity entity = EntityUtil.getEntity(EntityType.CLUSTER, dataNotificationRequest.getCluster());
-                Cluster clusterEntity = (Cluster) entity;
-                Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
-                FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
-                Map<Path, Boolean> locations = dataNotificationRequest.getLocationMap();
-                List<Path> nonAvailablePaths = getUnAvailablePaths(locations);
-                updatePathsAvailability(nonAvailablePaths, fs, locations);
-                if (allPathsExist(locations)) {
-                    return true;
-                }
-            } catch (FalconException e) {
-                LOG.error("Retrieving the Cluster Entity " + e);
-            } catch (IOException e) {
-                LOG.error("Unable to connect to FileSystem " + e);
-            }
-            return false;
-        }
-
-        private void updatePathsAvailability(List<Path> unAvailablePaths, FileSystem fs,
-                                             Map<Path, Boolean> locations) throws IOException {
-            for (Path path : unAvailablePaths) {
-                if (fs.exists(path)) {
-                    if (locations.containsKey(path)) {
-                        locations.put(path, true);
-                    } else {
-                        locations.put(new Path(path.toUri().getPath()), true);
-                    }
-                }
-            }
-        }
-
-        private List<Path> getUnAvailablePaths(Map<Path, Boolean> locations) {
-            List<Path> paths = new ArrayList<>();
-            for (Map.Entry<Path, Boolean> pathInfo : locations.entrySet()) {
-                if (!pathInfo.getValue()) {
-                    paths.add(pathInfo.getKey());
-                }
-            }
-            return paths;
-        }
-
-        private boolean allPathsExist(Map<Path, Boolean> locations) {
-            if (locations.containsValue(Boolean.FALSE)) {
-                return false;
-            }
-            return true;
         }
     }
 

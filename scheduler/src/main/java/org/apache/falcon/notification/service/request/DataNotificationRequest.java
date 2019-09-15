@@ -19,6 +19,7 @@ package org.apache.falcon.notification.service.request;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.execution.NotificationHandler;
+import org.apache.falcon.execution.SchedulerUtil;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.state.ID;
 import org.apache.hadoop.fs.Path;
@@ -35,15 +36,18 @@ import java.util.concurrent.TimeUnit;
  * The setter methods of the class support chaining similar to a builder class.
  */
 public class DataNotificationRequest extends NotificationRequest implements Delayed {
-    // Boolean represents path availability to avoid checking all paths for every poll.
-    private Map<Path, Boolean> locations;
-    private long pollingFrequencyInMillis;
-    private long timeoutInMillis;
-    private String cluster;
-    private long accessTimeInMillis;
-    private long createdTimeInMillis;
+
+    protected long pollingFrequencyInMillis;
+    protected long timeoutInMillis;
+    protected String cluster;
+    protected long accessTimeInMillis;
+    protected long createdTimeInMillis;
+    protected Map<Path, Boolean> locations;
+    protected String inputName;
     // Represents request was accessed by DataAvailability service first time or not.
     private boolean isFirst;
+    protected SchedulerUtil.EXPTYPE expType;
+    protected boolean isOptional;
 
 
     /**
@@ -63,21 +67,23 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
      * @param cluster
      * @param pollingFrequencyInMillis
      * @param timeoutInMillis
-     * @param locations
+     * @param input
+     * @param optional
      */
     public DataNotificationRequest(NotificationHandler notifHandler, ID callbackId,
                                    String cluster, long pollingFrequencyInMillis,
-                                   long timeoutInMillis, Map<Path, Boolean> locations) {
+                                   long timeoutInMillis, String input, boolean optional) {
         this.handler = notifHandler;
         this.callbackId = callbackId;
         this.service = NotificationServicesRegistry.SERVICE.DATA;
         this.cluster = cluster;
         this.pollingFrequencyInMillis = pollingFrequencyInMillis;
         this.timeoutInMillis = timeoutInMillis;
-        this.locations = locations;
         this.accessTimeInMillis = System.currentTimeMillis();
         this.createdTimeInMillis = accessTimeInMillis;
         this.isFirst = true;
+        this.inputName = input;
+        this.isOptional = optional;
     }
 
 
@@ -97,7 +103,6 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
         }
         return false;
     }
-
 
     /**
      * Obtain list of paths from locations map.
@@ -121,6 +126,12 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
         return this.locations;
     }
 
+
+    public void setLocationMap(Map<Path, Boolean> locationMap) {
+        this.locations = locationMap;
+    }
+
+
     @Override
     public long getDelay(TimeUnit unit) {
         if (isFirst) {
@@ -136,6 +147,20 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
         return (int) (this.getDelay(TimeUnit.MILLISECONDS) - other.getDelay(TimeUnit.MILLISECONDS));
     }
 
+    public String getInputName() {
+        return inputName;
+    }
+
+    public SchedulerUtil.EXPTYPE getExpType() {
+        return expType;
+    }
+
+    public boolean isOptional() {
+        return isOptional;
+    }
+
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -144,7 +169,7 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DataNotificationRequest that = (DataNotificationRequest) o;
+        LocationBasedDataNotificationRequest that = (LocationBasedDataNotificationRequest) o;
         if (!StringUtils.equals(cluster, that.cluster)) {
             return false;
         }
@@ -170,13 +195,14 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
         result = 31 * result + Long.valueOf(pollingFrequencyInMillis).hashCode();
         result = 31 * result + Long.valueOf(timeoutInMillis).hashCode();
         result = 31 * result + Long.valueOf(createdTimeInMillis).hashCode();
+        result = 31 * result + expType.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
         return "cluster: " + this.getCluster() + " locations: " + this.locations + " createdTime: "
-                + this.createdTimeInMillis;
+                + this.createdTimeInMillis + " expType: " + this.expType;
     }
 
 }

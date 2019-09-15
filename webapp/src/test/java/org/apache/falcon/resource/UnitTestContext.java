@@ -88,6 +88,12 @@ public class UnitTestContext extends AbstractTestContext {
                 new Path(wfPath, "workflow.xml"));
         mkdir(fs, new Path(wfParent, "input/2012/04/20/00"));
         mkdir(fs, new Path(wfParent, "input/2012/04/21/00"));
+        mkdir(fs, new Path(wfParent, "input/2016/03/20/00"));
+        mkdir(fs, new Path(wfParent, "input/2016/03/18/00"));
+        mkdir(fs, new Path(wfParent, "input/2016/03/16/00"));
+        mkdir(fs, new Path(wfParent, "input/2016/03/31/20"));
+        mkdir(fs, new Path(wfParent, "input/2016/03/31/12"));
+        mkdir(fs, new Path(wfParent, "input/2016/04/01/00"));
         Path outPath = new Path(wfParent, "output");
         mkdir(fs, outPath, new FsPermission((short) 511));
     }

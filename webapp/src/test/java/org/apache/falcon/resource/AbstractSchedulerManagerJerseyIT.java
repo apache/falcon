@@ -57,6 +57,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
 
     public static final String PROCESS_TEMPLATE = "/local-process-noinputs-template.xml";
     public static final String PROCESS_TEMPLATE_NOLATE_DATA = "/process-nolatedata-template.xml";
+    public static final String PROCESS_TEMPLATE_NOLATE_DATA_LATEST = "/process-nolatedata-latest-template.xml";
     public static final String PROCESS_NAME = "processName";
     protected static final String START_INSTANCE = "2012-04-20T00:00Z";
     private static FalconJPAService falconJPAService = FalconJPAService.get();

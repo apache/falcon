@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.predicate;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.execution.NotificationHandler;
 import org.apache.falcon.notification.service.event.DataEvent;
@@ -26,7 +25,6 @@ import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.RerunEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.state.ID;
-import org.apache.hadoop.fs.Path;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -41,6 +39,8 @@ import java.util.TreeMap;
  * This will be serialized and stored in state store.
  */
 public class Predicate implements Serializable {
+
+
 
     /**
      * Type of predicate, currently data and time are supported.
@@ -159,15 +159,13 @@ public class Predicate implements Serializable {
     /**
      * Creates a predicate of type DATA.
      *
-     * @param paths List of paths to check
+     * @param noOfPaths Lengths of paths to check
      * @return
      */
-    public static Predicate createDataPredicate(List<Path> paths) {
-        Collections.sort(paths);
+    public static Predicate createDataPredicate(int noOfPaths) {
         return new Predicate(TYPE.DATA)
-                .addClause("path", StringUtils.join(paths, ","));
+                .addClause("numpaths", noOfPaths);
     }
-
 
     /**
      * Creates a predicate of type JOB_COMPLETION.
@@ -205,7 +203,7 @@ public class Predicate implements Serializable {
         if (event.getType() == EventType.DATA_AVAILABLE) {
             DataEvent dataEvent = (DataEvent) event;
             if (dataEvent.getDataLocations() != null) {
-                return createDataPredicate(dataEvent.getDataLocations());
+                return createDataPredicate(dataEvent.getDataLocations().size());
             } else {
                 throw new FalconException("Event does not have enough data to create a predicate");
             }

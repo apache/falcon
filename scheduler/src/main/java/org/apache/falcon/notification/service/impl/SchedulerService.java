@@ -306,9 +306,16 @@ public class SchedulerService implements FalconNotificationService, Notification
                             DAGEngineFactory.getDAGEngine(instance.getCluster()).reRun(instance, props, isForced);
                         }
                     } else {
+                        Properties props = new Properties();
+                        if (instance.getProperties() != null && !instance.getProperties().isEmpty()) {
+                            props.putAll(instance.getProperties());
+                        }
                         EntityState entityState = STATE_STORE.getEntity(new EntityID(instance.getEntity()));
+                        if (entityState.getProperties() != null && !entityState.getProperties().isEmpty()) {
+                            props.putAll(entityState.getProperties());
+                        }
                         externalId = DAGEngineFactory.getDAGEngine(instance.getCluster())
-                                .run(instance, entityState.getProperties());
+                                .run(instance, props);
                     }
                     LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     JobScheduledEvent event = new JobScheduledEvent(instance.getId(),

@@ -34,6 +34,7 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.util.DateUtil;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.format.DateTimeFormat;
@@ -70,7 +71,7 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
 
         DateUtil.setTimeZone(entity.getTimezone().getID());
         ExpressionHelper.setReferenceDate(new Date(getNominalTime().getMillis()));
-        elProps.putAll(getInputProps(cluster));
+        elProps.putAll(getInputProps(cluster, suppliedProps));
         elProps.putAll(getOutputProps());
         elProps.putAll(evalProperties());
         Properties buildProps  = build(cluster, buildPath);
@@ -149,7 +150,7 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
         return props;
     }
 
-    private Properties getInputProps(Cluster clusterObj) throws FalconException {
+    private Properties getInputProps(Cluster clusterObj, Properties suppliedProps) throws FalconException {
         Properties props = new Properties();
 
         if (entity.getInputs() == null) {
@@ -173,47 +174,12 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
             falconInputNames.add(input.getName());
             falconInputFeedStorageTypes.add(storage.getType().name());
             String partition  = input.getPartition();
-
-            String startTimeExp = input.getStart();
-            String endTimeExp = input.getEnd();
-            ExpressionHelper.setReferenceDate(new Date(getNominalTime().getMillis()));
-            Date startTime = EXPRESSION_HELPER.evaluate(startTimeExp, Date.class);
-            Date endTime = EXPRESSION_HELPER.evaluate(endTimeExp, Date.class);
-
-            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
-                org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
-                        EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
-                if (!EntityUtil.responsibleFor(clusterEntity.getColo())) {
-                    continue;
-                }
-
-                List<Location> locations = FeedHelper.getLocations(cluster, feed);
-                for (Location loc : locations) {
-                    if (loc.getType() != LocationType.DATA) {
-                        continue;
-                    }
-                    List<String> paths = new ArrayList<>();
-                    List<Date> instanceTimes = EntityUtil.getEntityInstanceTimes(feed, cluster.getName(),
-                            startTime, endTime); // test when startTime and endTime are equal.
-                    for (Date instanceTime : instanceTimes) {
-                        String path = EntityUtil.evaluateDependentPath(loc.getPath(), instanceTime);
-                        if (StringUtils.isNotBlank(partition)) {
-                            if (!path.endsWith("/") && !partition.startsWith("/")) {
-                                path = path + "/";
-                            }
-                            path = path + partition;
-                        }
-                        path = getStoragePath(path);
-                        paths.add(path);
-                    }
-                    if (loc.getType() != LocationType.DATA) {
-                        props.put(input.getName() + "." + loc.getType().toString().toLowerCase(),
-                                StringUtils.join(paths, ","));
-                    } else {
-                        props.put(input.getName(), StringUtils.join(paths, ","));
-                    }
-                    falconInputPaths.add(StringUtils.join(paths, ","));
-                }
+            if (suppliedProps!= null
+                    && suppliedProps.containsKey(OozieUtils.FALCON_PROCESS_INPUT_PATHS + "." + input.getName())) {
+                String paths = suppliedProps.getProperty(OozieUtils.FALCON_PROCESS_INPUT_PATHS
+                        + "." + input.getName());
+                List<String> inPaths = getInPaths(paths, partition);
+                falconInputPaths.addAll(inPaths);
             }
         }
         props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), StringUtils.join(falconInputFeeds, "#"));
@@ -224,4 +190,22 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
         return props;
     }
 
+    private String addPartition(String path, String partition) {
+        if (StringUtils.isNotBlank(partition)) {
+            if (!path.endsWith("/") && !partition.startsWith("/")) {
+                path = path + "/";
+            }
+            path = path + partition;
+        }
+        return path;
+    }
+
+    private List getInPaths(String paths, String partition) {
+        List<String> inPaths = new ArrayList<>();
+        for (String path : paths.split(",")) {
+            path = addPartition(path, partition);
+            inPaths.add(getStoragePath(path));
+        }
+        return inPaths;
+    }
 }
